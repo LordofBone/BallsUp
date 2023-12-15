@@ -231,7 +231,8 @@ def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_stren
     plt.subplot(1, 2, 1)
     plt.plot(floors, average_attempts, marker='o', color='b')
     plt.title(
-        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Ball Weight: {avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
+        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Ball Weight: '
+        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
     plt.xlabel('Floor Number')
     plt.ylabel('Average Attempts')
     plt.grid(True)
@@ -240,7 +241,8 @@ def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_stren
     plt.subplot(1, 2, 2)
     plt.plot(floors, break_percentages, marker='o', color='r')
     plt.title(
-        f'Break Percentage per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Plate Strength: {avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
+        f'Break Percentage per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Plate Strength: '
+        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
     plt.xlabel('Floor Number')
     plt.ylabel('Break Percentage (%)')
     plt.grid(True)
@@ -257,17 +259,17 @@ def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_stren
 
 if __name__ == '__main__':
     # Adjustable variables
-    NUM_ITERATIONS = 10000  # Number of iterations to run the simulation
-    BALL_WEIGHT_RANGE = (0.01, 2)  # Ball weight range in kg (e.g., from 50g to 100kg)
-    PLATE_STRENGTH_RANGE = (0.1, 100)  # Plate strength range in Newtons
-    FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters
+    NUM_ITERATIONS = 10000  # Number of iterations to run the simulation | Default: 10000
+    BALL_WEIGHT_RANGE = (0.01, 2)  # Ball weight range in kg (e.g., from 50g to 100kg) | Default: (0.01, 2)
+    PLATE_STRENGTH_RANGE = (0.1, 100)  # Plate strength range in Newtons | Default: (0.1, 100)
+    FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters | Default: (1, 11)
 
     # List of strategies
     strategies = [linear_search_simulation_with_flag, precise_halving_strategy_simulation_with_flag, binary_search_strategy]
-    # strategies = [binary_search_strategy]
 
     # Run the simulation
-    simulation_results = run_simulation_with_adjusted_parameters(NUM_ITERATIONS, BALL_WEIGHT_RANGE, PLATE_STRENGTH_RANGE,
+    simulation_results = run_simulation_with_adjusted_parameters(NUM_ITERATIONS, BALL_WEIGHT_RANGE,
+                                                                 PLATE_STRENGTH_RANGE,
                                                                  FLOOR_HEIGHT_RANGE, strategies)
 
     # Pretty-print the results
@@ -283,6 +285,5 @@ if __name__ == '__main__':
     avg_floor_height = sum(FLOOR_HEIGHT_RANGE) / 2  # Average of the FLOOR_HEIGHT_RANGE
 
     # Example usage
-    plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height, most_efficient_floor,
-                            efficiency_score,
-                            NUM_ITERATIONS)
+    plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height,
+                            most_efficient_floor, efficiency_score, NUM_ITERATIONS)

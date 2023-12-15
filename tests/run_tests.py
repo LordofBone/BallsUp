@@ -8,10 +8,10 @@ class TestBallDropSimulation(unittest.TestCase):
     def test_calculate_impact_force(self):
         # Test with known values
         self.assertAlmostEqual(calculate_impact_force(10, 1), 14.0,
-                               places=2)  # You need to replace 14.0 with the correct expected value
+                               places=2)
 
     def test_linear_search_simulation_with_flag(self):
-        # Setup a test case
+        # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
         plate_strength = 10  # Can withstand a force of 10 Newtons
@@ -23,7 +23,7 @@ class TestBallDropSimulation(unittest.TestCase):
                          (expected_attempts, expected_did_break))
 
     def test_precise_halving_strategy_simulation_with_flag(self):
-        # Setup a test case
+        # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
         plate_strength = 10  # Can withstand a force of 10 Newtons
@@ -36,7 +36,7 @@ class TestBallDropSimulation(unittest.TestCase):
                          (expected_attempts, expected_did_break))
 
     def test_binary_search_strategy(self):
-        # Setup a test case
+        # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
         plate_strength = 10  # Can withstand a force of 10 Newtons

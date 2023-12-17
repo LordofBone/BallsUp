@@ -1,6 +1,8 @@
 import unittest
+
 from runner import calculate_impact_force, linear_search_simulation_with_flag, \
-    precise_halving_strategy_simulation_with_flag, binary_search_strategy, find_most_efficient_floor_from_results
+    precise_halving_strategy_simulation_with_flag, binary_search_strategy, find_most_efficient_floor_from_results, \
+    cumulative_height
 
 
 class TestBallDropSimulation(unittest.TestCase):
@@ -8,6 +10,13 @@ class TestBallDropSimulation(unittest.TestCase):
     def test_calculate_impact_force(self):
         # Test with known values
         self.assertAlmostEqual(calculate_impact_force(10, 1), 14.0,
+                               places=2)
+
+    def test_cumulative_height(self):
+        floor_heights = [0.1, 1.2, 5, 7.1, 10]
+
+        # Test with known values
+        self.assertAlmostEqual(cumulative_height(floor_heights, 5), 23.4,
                                places=2)
 
     def test_linear_search_simulation_with_flag(self):
@@ -19,8 +28,9 @@ class TestBallDropSimulation(unittest.TestCase):
 
         expected_attempts = 47
         expected_did_break = True
+        expected_break_floor = 6
         self.assertEqual(linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor),
-                         (expected_attempts, expected_did_break))
+                         (expected_attempts, expected_did_break, expected_break_floor))
 
     def test_precise_halving_strategy_simulation_with_flag(self):
         # Set up a test case
@@ -31,9 +41,10 @@ class TestBallDropSimulation(unittest.TestCase):
 
         expected_attempts = 5
         expected_did_break = True
+        expected_break_floor = 6
         self.assertEqual(precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength,
                                                                        start_floor),
-                         (expected_attempts, expected_did_break))
+                         (expected_attempts, expected_did_break, expected_break_floor))
 
     def test_binary_search_strategy(self):
         # Set up a test case
@@ -44,10 +55,51 @@ class TestBallDropSimulation(unittest.TestCase):
 
         expected_attempts = 46
         expected_did_break = True
+        expected_break_floor = 6
         self.assertEqual(binary_search_strategy(floor_heights, ball_weight, plate_strength, start_floor),
-                         (expected_attempts, expected_did_break))
+                         (expected_attempts, expected_did_break, expected_break_floor))
 
-    def test_find_most_efficient_floor_from_results(self):
+    def test_linear_search_simulation_with_flag_no_possible_break_skip(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10000  # Can withstand a force of 10 Newtons
+        start_floor = 50
+
+        expected_attempts = 0
+        expected_did_break = False
+        expected_break_floor = None
+        self.assertEqual(linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor),
+                         (expected_attempts, expected_did_break, expected_break_floor))
+
+    def test_precise_halving_strategy_simulation_with_flag_no_possible_break_skip(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10000  # Can withstand a force of 10 Newtons
+        start_floor = 50
+
+        expected_attempts = 0
+        expected_did_break = False
+        expected_break_floor = None
+        self.assertEqual(precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength,
+                                                                       start_floor),
+                         (expected_attempts, expected_did_break, expected_break_floor))
+
+    def test_binary_search_strategy_no_possible_break_skip(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10000  # Can withstand a force of 10 Newtons
+        start_floor = 50
+
+        expected_attempts = 0
+        expected_did_break = False
+        expected_break_floor = None
+        self.assertEqual(binary_search_strategy(floor_heights, ball_weight, plate_strength, start_floor),
+                         (expected_attempts, expected_did_break, expected_break_floor))
+
+    def test_find_most_efficient_floor_from_results_no_possible_break_skip(self):
         simulation_results = \
             {1: {'attempts': 7465,
                  'average_attempts': 7.465,

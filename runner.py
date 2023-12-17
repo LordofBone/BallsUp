@@ -1,6 +1,7 @@
-import random
 import math
+import random
 from pprint import pprint
+
 import matplotlib.pyplot as plt
 
 
@@ -16,6 +17,11 @@ def calculate_impact_force(height, weight):
     return weight * velocity
 
 
+# Function to calculate the cumulative height up to a given floor
+def cumulative_height(floor_heights, floor):
+    return sum(floor_heights[:floor])
+
+
 def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor):
     """
     Apply a linear search strategy to find the minimum breaking floor from a given start floor.
@@ -26,14 +32,19 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
     :return: Number of attempts to find the minimum breaking floor and a flag indicating if a break occurred.
     """
     attempts = 0
+    did_break = False
+    breaking_floor = None
+
+    # Calculate the maximum possible force (at the highest floor)
+    max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
+    if max_force <= plate_strength:
+        # If the max force doesn't break the plate, exit early
+        return attempts, did_break, breaking_floor
+
     floor = start_floor
 
-    # Adjust floor index for zero-based list indexing
-    adjusted_floor_index = floor - 1
-
     # Initially check if the plate breaks or not at the starting floor
-    current_force = calculate_impact_force(floor_heights[adjusted_floor_index] * floor, ball_weight)
-    # current_force = calculate_impact_force(floor_heights[floor] * floor, ball_weight)
+    current_force = calculate_impact_force(cumulative_height(floor_heights, floor), ball_weight)
     initial_break = current_force > plate_strength
     attempts += 1
 
@@ -42,24 +53,26 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
         while floor > 0:
             floor -= 1
             attempts += 1
-            current_force = calculate_impact_force(floor_heights[floor] * (floor + 1), ball_weight)
+            current_force = calculate_impact_force(cumulative_height(floor_heights, floor + 1), ball_weight)
             if current_force <= plate_strength:
                 # Found the floor just before it stops breaking
+                did_break = True
                 floor += 1
+                breaking_floor = floor + 1
                 break
     else:
         # If it doesn't break, go up to find the breaking floor
         while floor < 99:
             floor += 1
             attempts += 1
-            current_force = calculate_impact_force(floor_heights[floor] * (floor + 1), ball_weight)
+            current_force = calculate_impact_force(cumulative_height(floor_heights, floor + 1), ball_weight)
             if current_force > plate_strength:
+                breaking_floor = floor + 1
+                did_break = True
                 # Found the breaking floor
                 break
 
-    did_break = (floor < 100) and (
-            calculate_impact_force(floor_heights[floor] * (floor + 1), ball_weight) > plate_strength)
-    return attempts, did_break
+    return attempts, did_break, breaking_floor
 
 
 def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor):
@@ -71,6 +84,15 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
     :param start_floor: Starting floor for the simulation.
     :return: Number of attempts to find the breaking floor and a flag indicating if a break occurred.
     """
+    attempts = 0
+    did_break = False
+    breaking_floor = None
+
+    # Calculate the maximum possible force (at the highest floor)
+    max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
+    if max_force <= plate_strength:
+        # If the max force doesn't break the plate, exit early
+        return attempts, did_break, breaking_floor
 
     attempts = 0
     floor = start_floor
@@ -79,7 +101,7 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
     # Halving strategy
     while step >= 1:
         attempts += 1
-        current_force = calculate_impact_force(floor_heights[floor - 1] * floor, ball_weight)
+        current_force = calculate_impact_force(cumulative_height(floor_heights, floor - 1), ball_weight)
 
         if current_force > plate_strength:
             floor -= step
@@ -90,14 +112,15 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
     # Iterative search by counting up
     did_break = False
     while floor < 100:
-        current_force = calculate_impact_force(floor_heights[floor] * (floor + 1), ball_weight)
+        current_force = calculate_impact_force(cumulative_height(floor_heights, floor + 1), ball_weight)
         if current_force > plate_strength:
             did_break = True
+            breaking_floor = floor + 1
             break
         floor += 1
         attempts += 1
 
-    return attempts, did_break
+    return attempts, did_break, breaking_floor
 
 
 def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_floor):
@@ -109,9 +132,16 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
     :param start_floor:
     :return:
     """
+    attempts = 0
+    did_break = False
+    breaking_floor = None
 
-    # Adjust start_floor to zero-based indexing when accessing the list
-    start_floor_index = start_floor - 1
+    # Calculate the maximum possible force (at the highest floor)
+    max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
+    if max_force <= plate_strength:
+        # If the max force doesn't break the plate, exit early
+        return attempts, did_break, breaking_floor
+
     low = 0
     high = len(floor_heights) - 1
     attempts = 0
@@ -119,36 +149,36 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
     breaking_floor = None
 
     # Check if the starting floor breaks the plate
-    current_force = calculate_impact_force(floor_heights[start_floor_index] * start_floor, ball_weight)
+    current_force = calculate_impact_force(cumulative_height(floor_heights, start_floor), ball_weight)
     attempts += 1
     if current_force > plate_strength:
         did_break = True
-        breaking_floor = start_floor_index
+        breaking_floor = start_floor
         # Since the plate broke at the starting floor, search downwards for the actual breaking floor
         while breaking_floor > 0:
-            current_force = calculate_impact_force(floor_heights[breaking_floor - 1] * breaking_floor, ball_weight)
+            current_force = calculate_impact_force(cumulative_height(floor_heights, breaking_floor - 1), ball_weight)
             attempts += 1
             if current_force <= plate_strength:
                 # Found the actual breaking floor
+
                 break
             breaking_floor -= 1
     else:
         # If the plate does not break at the starting floor, perform binary search upwards
-        low = start_floor_index + 1
+        low = start_floor + 1
         while low <= high:
             mid = (low + high) // 2
             attempts += 1
-            current_force = calculate_impact_force(floor_heights[mid] * (mid + 1), ball_weight)
+            current_force = calculate_impact_force(cumulative_height(floor_heights, mid + 1), ball_weight)
 
             if current_force > plate_strength:
                 did_break = True
-                # breaking_floor = mid
+                breaking_floor = mid
                 high = mid - 1
             else:
                 low = mid + 1
 
-    # The breaking_floor needs to be incremented by 1 if a break was found because of zero-based indexing
-    return attempts, did_break
+    return attempts, did_break, breaking_floor
 
 
 def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, plate_strength_range, floor_height_range,
@@ -162,8 +192,8 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
     :param strategies: List of strategy functions to use in the simulation.
     :return: Aggregated results for each starting floor and each strategy.
     """
-    # Modify the structure of aggregated results
     aggregated_results = {floor: {'attempts': 0, 'breaks': 0} for floor in range(1, 101)}
+    break_results = {floor: {'breaks': 0} for floor in range(1, 101)}
     total_strategy_executions = num_iterations * len(strategies)
 
     for _ in range(num_iterations):
@@ -172,18 +202,23 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
         plate_strength = random.uniform(*plate_strength_range)
 
         for floor in range(1, 101):
+            # print(floor)
             for strategy in strategies:
-                attempts, did_break = strategy(floor_heights, ball_weight, plate_strength, floor)
+                attempts, did_break, breaking_floor = strategy(floor_heights, ball_weight, plate_strength, floor)
                 aggregated_results[floor]['attempts'] += attempts
                 if did_break:
-                    aggregated_results[floor]['breaks'] += 1
+                    break_results[breaking_floor]['breaks'] += 1
+
+    total_attempts = sum(data['attempts'] for floor, data in aggregated_results.items())
 
     # Calculate average attempts and break percentage for each floor
     for floor in aggregated_results:
         aggregated_results[floor]['average_attempts'] = aggregated_results[floor][
                                                             'attempts'] / total_strategy_executions
-        aggregated_results[floor]['break_percentage'] = (aggregated_results[floor][
-                                                             'breaks'] / total_strategy_executions) * 100
+
+        aggregated_results[floor]['breaks'] = (break_results[floor]['breaks'])
+
+        aggregated_results[floor]['break_percentage'] = (aggregated_results[floor]['breaks'] / total_attempts) * 100
 
     return aggregated_results
 
@@ -197,10 +232,10 @@ def find_most_efficient_floor_from_results(simulation_results):
     efficiency_scores = {}
 
     for floor, data in simulation_results.items():
-        if data['breaks'] > 0:
+        try:
             efficiency_score = data['average_attempts'] / data['break_percentage']
             efficiency_scores[floor] = efficiency_score
-        else:
+        except ZeroDivisionError:
             efficiency_scores[floor] = float('inf')  # Set to infinity if no breaks
 
     # Find the floor with the lowest efficiency score
@@ -208,49 +243,108 @@ def find_most_efficient_floor_from_results(simulation_results):
     return most_efficient_floor, efficiency_scores[most_efficient_floor]
 
 
+def find_floor_with_most_breaks(aggregated_results):
+    """
+    Find the floor with the most breaks.
+    :param aggregated_results: Dictionary containing the results from the simulation.
+    :return: Floor with the most breaks and the number of breaks.
+    """
+    max_breaks = 0
+    floor_with_most_breaks = None
+
+    for floor, data in aggregated_results.items():
+        if data['breaks'] > max_breaks:
+            max_breaks = data['breaks']
+            floor_with_most_breaks = floor
+
+    return floor_with_most_breaks, max_breaks
+
+
 def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height,
-                            most_efficient_floor,
-                            efficiency_score, iterations):
+                            most_efficient_floor, efficiency_score, iterations):
     """
     Plot the simulation results and annotate with the most efficient floor.
     :param simulation_results: Dictionary containing the results from the simulation.
     :param avg_ball_weight: Average weight of the ball used in the simulation.
+    :param avg_plate_strength: Average strength of the plate used in the simulation.
     :param avg_floor_height: Average height of the floors used in the simulation.
     :param most_efficient_floor: The most efficient starting floor determined from the simulation.
     :param efficiency_score: The efficiency score of the most efficient floor.
+    :param iterations: Number of iterations used in the simulation.
     """
     # Extracting data from simulation_results
     floors = list(simulation_results.keys())
     average_attempts = [simulation_results[floor]['average_attempts'] for floor in floors]
-    break_percentages = list(reversed([simulation_results[floor]['break_percentage'] for floor in floors]))
+    break_percentages = [simulation_results[floor]['break_percentage'] for floor in floors]
+    total_breaks_per_floor = [simulation_results[floor]['breaks'] for floor in floors]
+    efficiency_scores = [
+        data['average_attempts'] / data['break_percentage'] if data['break_percentage'] > 0 else float('inf') for
+        floor, data in simulation_results.items()]
 
-    # Creating a plot
-    plt.figure(figsize=(15, 6))
+    # Creating a plot window with 4 subplots
+    plt.figure(figsize=(15, 20))
+
+    # Adjust the font sizes for the titles, labels, and ticks here:
+    title_fontsize = 8
+    label_fontsize = 6
+    ticks_fontsize = 6
+    annotation_fontsize = 8
 
     # Plotting average attempts
-    plt.subplot(1, 2, 1)
+    plt.subplot(4, 1, 1)
     plt.plot(floors, average_attempts, marker='o', color='b')
     plt.title(
-        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Ball Weight: '
-        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
-    plt.xlabel('Floor Number')
-    plt.ylabel('Average Attempts')
+        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Plate Strength: '
+        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)',
+        fontsize=title_fontsize)
+    plt.xlabel('Floor Number', fontsize=label_fontsize)
+    plt.ylabel('Average Attempts', fontsize=label_fontsize)
+    plt.xticks(fontsize=ticks_fontsize)
+    plt.yticks(fontsize=ticks_fontsize)
     plt.grid(True)
 
     # Plotting break percentage
-    plt.subplot(1, 2, 2)
+    plt.subplot(4, 1, 2)
     plt.plot(floors, break_percentages, marker='o', color='r')
-    plt.title(
-        f'Break Percentage per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Plate Strength: '
-        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)')
-    plt.xlabel('Floor Number')
-    plt.ylabel('Break Percentage (%)')
+    plt.title(f'Break Percentage per Floor', fontsize=title_fontsize)
+    plt.xlabel('Floor Number', fontsize=label_fontsize)
+    plt.ylabel('Break Percentage (%)', fontsize=label_fontsize)
+    plt.xticks(fontsize=ticks_fontsize)
+    plt.yticks(fontsize=ticks_fontsize)
     plt.grid(True)
 
+    # Plotting total breaks per floor
+    plt.subplot(4, 1, 3)
+    plt.bar(floors, total_breaks_per_floor, color='g')
+    plt.title('Total Breaks per Actual Breaking Floor', fontsize=title_fontsize)
+    plt.xlabel('Floor Number', fontsize=label_fontsize)
+    plt.ylabel('Total Breaks', fontsize=label_fontsize)
+    plt.xticks(fontsize=ticks_fontsize)
+    plt.yticks(fontsize=ticks_fontsize)
+    plt.grid(True)
+
+    # Plotting efficiency scores
+    plt.subplot(4, 1, 4)
+    plt.plot(floors, efficiency_scores, marker='o', color='m')
+    plt.title('Efficiency Score per Floor (lower is better)', fontsize=title_fontsize)
+    plt.xlabel('Floor Number', fontsize=label_fontsize)
+    plt.ylabel('Efficiency Score', fontsize=label_fontsize)
+    plt.xticks(fontsize=ticks_fontsize)
+    plt.yticks(fontsize=ticks_fontsize)
+    plt.grid(True)
+
+    # Highlight the most efficient floor in each plot
+    for i in range(1, 5):
+        plt.subplot(4, 1, i)
+        plt.axvline(x=most_efficient_floor, color='k', linestyle='--')
+        plt.text(most_efficient_floor, plt.ylim()[1] * 0.9, f'Most Efficient Floor: {most_efficient_floor}', ha='right',
+                 fontsize=annotation_fontsize)
+
     # Annotating with the most efficient floor
-    plt.figtext(0.5, 0.01, f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score:.6f}, "
-                           f"Iterations: {iterations}",
-                ha="center", fontsize=12, bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
+    plt.figtext(0.5, 0.02,
+                f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score:.6f}, Iterations: "
+                f"{iterations}", ha="center", fontsize=annotation_fontsize,
+                bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
 
     # Display the plot
     plt.tight_layout()
@@ -265,7 +359,8 @@ if __name__ == '__main__':
     FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters | Default: (1, 11)
 
     # List of strategies
-    strategies = [linear_search_simulation_with_flag, precise_halving_strategy_simulation_with_flag, binary_search_strategy]
+    strategies = [linear_search_simulation_with_flag, precise_halving_strategy_simulation_with_flag,
+                  binary_search_strategy]
 
     # Run the simulation
     simulation_results = run_simulation_with_adjusted_parameters(NUM_ITERATIONS, BALL_WEIGHT_RANGE,
@@ -275,7 +370,11 @@ if __name__ == '__main__':
     # Pretty-print the results
     pprint(simulation_results)
 
-    # Example usage
+    # Calculate the floor with the most breaks and its number of breaks
+    most_breaks_floor, most_breaks = find_floor_with_most_breaks(simulation_results)
+    print(f"Floor with Most Breaks: {most_breaks_floor}, Number of Breaks: {most_breaks}")
+
+    # Calculate the most efficient floor and its efficiency score
     most_efficient_floor, efficiency_score = find_most_efficient_floor_from_results(simulation_results)
     print(f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score}")
 
@@ -284,6 +383,6 @@ if __name__ == '__main__':
     avg_plate_strength = sum(PLATE_STRENGTH_RANGE) / 2  # Average of the FLOOR_HEIGHT_RANGE
     avg_floor_height = sum(FLOOR_HEIGHT_RANGE) / 2  # Average of the FLOOR_HEIGHT_RANGE
 
-    # Example usage
+    # Plot the results
     plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height,
                             most_efficient_floor, efficiency_score, NUM_ITERATIONS)

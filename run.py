@@ -218,7 +218,10 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
 
         aggregated_results[floor]['breaks'] = (break_results[floor]['breaks'])
 
-        aggregated_results[floor]['break_percentage'] = (aggregated_results[floor]['breaks'] / total_attempts) * 100
+        try:
+            aggregated_results[floor]['break_percentage'] = (aggregated_results[floor]['breaks'] / total_attempts) * 100
+        except ZeroDivisionError:
+            aggregated_results[floor]['break_percentage'] = 0
 
     return aggregated_results
 
@@ -355,7 +358,7 @@ if __name__ == '__main__':
     # Adjustable variables
     NUM_ITERATIONS = 10000  # Number of iterations to run the simulation | Default: 10000
     BALL_WEIGHT_RANGE = (0.01, 2)  # Ball weight range in kg (e.g., from 50g to 100kg) | Default: (0.01, 2)
-    PLATE_STRENGTH_RANGE = (0.1, 100)  # Plate strength range in Newtons | Default: (0.1, 100)
+    PLATE_STRENGTH_RANGE = (0.1, 100000000)  # Plate strength range in Newtons | Default: (0.1, 100)
     FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters | Default: (1, 11)
 
     # List of strategies

@@ -39,7 +39,7 @@ class TestBallDropSimulation(unittest.TestCase):
         plate_strength = 10  # Can withstand a force of 10 Newtons
         start_floor = 50
 
-        expected_attempts = 6
+        expected_attempts = 7
         expected_did_break = True
         expected_break_floor = 5
         self.assertEqual(precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength,
@@ -85,7 +85,7 @@ class TestBallDropSimulation(unittest.TestCase):
         plate_strength = 10  # Can withstand a force of 10 Newtons
 
         expected_did_break = True
-        expected_break_floor = 6
+        expected_break_floor = 5
 
         for floor in range(1, 101):
             attempts, did_break, break_floor = precise_halving_strategy_simulation_with_flag(

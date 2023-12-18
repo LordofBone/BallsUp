@@ -278,26 +278,27 @@ def find_floor_with_most_breaks(aggregated_results):
     return floor_with_most_breaks, max_breaks
 
 
-def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height,
-                            most_efficient_floor, efficiency_score, iterations):
+def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot, avg_plate_strength_to_plot,
+                            avg_floor_height_to_plot,
+                            most_efficient_floor_to_plot, efficiency_score_to_plot, iterations):
     """
     Plot the simulation results and annotate with the most efficient floor.
-    :param simulation_results: Dictionary containing the results from the simulation.
-    :param avg_ball_weight: Average weight of the ball used in the simulation.
-    :param avg_plate_strength: Average strength of the plate used in the simulation.
-    :param avg_floor_height: Average height of the floors used in the simulation.
-    :param most_efficient_floor: The most efficient starting floor determined from the simulation.
-    :param efficiency_score: The efficiency score of the most efficient floor.
+    :param simulation_results_to_plot: Dictionary containing the results from the simulation.
+    :param avg_ball_weight_to_plot: Average weight of the ball used in the simulation.
+    :param avg_plate_strength_to_plot: Average strength of the plate used in the simulation.
+    :param avg_floor_height_to_plot: Average height of the floors used in the simulation.
+    :param most_efficient_floor_to_plot: The most efficient starting floor determined from the simulation.
+    :param efficiency_score_to_plot: The efficiency score of the most efficient floor.
     :param iterations: Number of iterations used in the simulation.
     """
     # Extracting data from simulation_results
-    floors = list(simulation_results.keys())
-    average_attempts = [simulation_results[floor]['average_attempts'] for floor in floors]
-    break_percentages = [simulation_results[floor]['break_percentage'] for floor in floors]
-    total_breaks_per_floor = [simulation_results[floor]['breaks'] for floor in floors]
+    floors = list(simulation_results_to_plot.keys())
+    average_attempts = [simulation_results_to_plot[floor]['average_attempts'] for floor in floors]
+    break_percentages = [simulation_results_to_plot[floor]['break_percentage'] for floor in floors]
+    total_breaks_per_floor = [simulation_results_to_plot[floor]['breaks'] for floor in floors]
     efficiency_scores = [
         data['average_attempts'] / data['break_percentage'] if data['break_percentage'] > 0 else float('inf') for
-        floor, data in simulation_results.items()]
+        floor, data in simulation_results_to_plot.items()]
 
     # Creating a plot window with 4 subplots
     plt.figure(figsize=(15, 20))
@@ -312,8 +313,8 @@ def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_stren
     plt.subplot(4, 1, 1)
     plt.plot(floors, average_attempts, marker='o', color='b')
     plt.title(
-        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight} kg, Avg Plate Strength: '
-        f'{avg_plate_strength} N, Avg Floor Height: {avg_floor_height} m)',
+        f'Average Number of Attempts per Floor\n(Avg Ball Weight: {avg_ball_weight_to_plot} kg, Avg Plate Strength: '
+        f'{avg_plate_strength_to_plot} N, Avg Floor Height: {avg_floor_height_to_plot} m)',
         fontsize=title_fontsize)
     plt.xlabel('Floor Number', fontsize=label_fontsize)
     plt.ylabel('Average Attempts', fontsize=label_fontsize)
@@ -354,14 +355,16 @@ def plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_stren
     # Highlight the most efficient floor in each plot
     for i in range(1, 5):
         plt.subplot(4, 1, i)
-        plt.axvline(x=most_efficient_floor, color='k', linestyle='--')
-        plt.text(most_efficient_floor, plt.ylim()[1] * 0.9, f'Most Efficient Floor: {most_efficient_floor}', ha='right',
+        plt.axvline(x=most_efficient_floor_to_plot, color='k', linestyle='--')
+        plt.text(most_efficient_floor_to_plot, plt.ylim()[1] * 0.9, f'Most Efficient Floor: '
+                                                                    f'{most_efficient_floor_to_plot}', ha='right',
                  fontsize=annotation_fontsize)
 
     # Annotating with the most efficient floor
     plt.figtext(0.5, 0.02,
-                f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score:.6f}, Iterations: "
-                f"{iterations}", ha="center", fontsize=annotation_fontsize,
+                f"Most Efficient Floor: {most_efficient_floor_to_plot}, Efficiency Score: "
+                f"{efficiency_score_to_plot:.6f},"
+                f"Iterations: {iterations}", ha="center", fontsize=annotation_fontsize,
                 bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
 
     # Display the plot

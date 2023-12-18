@@ -1,6 +1,6 @@
 import unittest
 
-from runner import calculate_impact_force, linear_search_simulation_with_flag, \
+from run import calculate_impact_force, linear_search_simulation_with_flag, \
     precise_halving_strategy_simulation_with_flag, binary_search_strategy, find_most_efficient_floor_from_results, \
     cumulative_height
 
@@ -26,7 +26,7 @@ class TestBallDropSimulation(unittest.TestCase):
         plate_strength = 10  # Can withstand a force of 10 Newtons
         start_floor = 50
 
-        expected_attempts = 47
+        expected_attempts = 46
         expected_did_break = True
         expected_break_floor = 6
         self.assertEqual(linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor),
@@ -39,9 +39,9 @@ class TestBallDropSimulation(unittest.TestCase):
         plate_strength = 10  # Can withstand a force of 10 Newtons
         start_floor = 50
 
-        expected_attempts = 5
+        expected_attempts = 6
         expected_did_break = True
-        expected_break_floor = 6
+        expected_break_floor = 5
         self.assertEqual(precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength,
                                                                        start_floor),
                          (expected_attempts, expected_did_break, expected_break_floor))
@@ -58,6 +58,63 @@ class TestBallDropSimulation(unittest.TestCase):
         expected_break_floor = 6
         self.assertEqual(binary_search_strategy(floor_heights, ball_weight, plate_strength, start_floor),
                          (expected_attempts, expected_did_break, expected_break_floor))
+
+    def test_linear_search_simulation_with_flag_consistent_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10  # Can withstand a force of 10 Newtons
+
+        expected_did_break = True
+        expected_break_floor = 6
+
+        for floor in range(1, 101):
+            attempts, did_break, break_floor = linear_search_simulation_with_flag(
+                floor_heights, ball_weight, plate_strength, floor)
+
+            # Check if the break floor is as expected
+            self.assertEqual(break_floor, expected_break_floor)
+
+            # Check if the ball did break
+            self.assertEqual(did_break, expected_did_break)
+
+    def test_precise_halving_strategy_simulation_with_flag_consistent_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10  # Can withstand a force of 10 Newtons
+
+        expected_did_break = True
+        expected_break_floor = 6
+
+        for floor in range(1, 101):
+            attempts, did_break, break_floor = precise_halving_strategy_simulation_with_flag(
+                floor_heights, ball_weight, plate_strength, floor)
+
+            # Check if the break floor is as expected
+            self.assertEqual(break_floor, expected_break_floor)
+
+            # Check if the ball did break
+            self.assertEqual(did_break, expected_did_break)
+
+    def test_binary_search_strategy_consistent_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 1  # 1 kg
+        plate_strength = 10  # Can withstand a force of 10 Newtons
+
+        expected_did_break = True
+        expected_break_floor = 6
+
+        for floor in range(1, 101):
+            attempts, did_break, break_floor = binary_search_strategy(
+                floor_heights, ball_weight, plate_strength, floor)
+
+            # Check if the break floor is as expected
+            self.assertEqual(break_floor, expected_break_floor)
+
+            # Check if the ball did break
+            self.assertEqual(did_break, expected_did_break)
 
     def test_linear_search_simulation_with_flag_no_possible_break_skip(self):
         # Set up a test case

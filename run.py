@@ -1,8 +1,12 @@
+import logging
 import math
 import random
 from pprint import pprint
 
 import matplotlib.pyplot as plt
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def calculate_impact_force(height, weight):
@@ -14,12 +18,21 @@ def calculate_impact_force(height, weight):
     """
     g = 9.8  # Gravity in m/s^2
     velocity = math.sqrt(2 * g * height)
-    return weight * velocity
+    force = weight * velocity
+    logging.debug(f"Calculated impact force: Height = {height} m, Weight = {weight} kg, Force = {force} N")
+    return force
 
 
-# Function to calculate the cumulative height up to a given floor
 def cumulative_height(floor_heights, floor):
-    return sum(floor_heights[:floor])
+    """
+    Calculate the cumulative height up to a given floor.
+    :param floor_heights: List of heights for each floor.
+    :param floor: Target floor number.
+    :return: Cumulative height up to the given floor.
+    """
+    cumulative_height_calc = sum(floor_heights[:floor])
+    logging.debug(f"Cumulative height calculated up to floor {floor}: {cumulative_height_calc} m")
+    return cumulative_height_calc
 
 
 def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor):
@@ -31,6 +44,8 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
     :param start_floor: Starting floor for the simulation.
     :return: Number of attempts to find the minimum breaking floor and a flag indicating if a break occurred.
     """
+    logging.debug(f"Starting Linear Search Strategy from floor {start_floor}")
+
     attempts = 0
     did_break = False
     breaking_floor = None
@@ -39,6 +54,7 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
     max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
     if max_force <= plate_strength:
         # If the max force doesn't break the plate, exit early
+        logging.debug("Maximum force doesn't break the plate. Exiting early.")
         return attempts, did_break, breaking_floor
 
     floor = start_floor
@@ -50,6 +66,7 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
 
     if initial_break:
         # If it breaks, go down to find the minimum breaking floor
+        logging.debug("Initial break detected. Searching downwards for minimum breaking floor.")
         while floor > 1:
             attempts += 1
             floor -= 1
@@ -63,6 +80,7 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
                 break
     else:
         # If it doesn't break, go up to find the breaking floor
+        logging.debug("No initial break. Searching upwards for breaking floor.")
         while floor < 100:
 
             attempts += 1
@@ -74,10 +92,22 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
                 # Found the breaking floor
                 break
 
+    logging.debug(
+        f"Linear Search Result: {attempts} attempts, Break occurred: {did_break}, Breaking floor: {breaking_floor}")
     return attempts, did_break, breaking_floor
 
 
 def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor):
+    """
+    Apply the precise halving strategy to find the minimum breaking floor from a given start floor.
+    :param floor_heights:
+    :param ball_weight:
+    :param plate_strength:
+    :param start_floor:
+    :return:
+    """
+    logging.debug(f"Starting Precise Halving Strategy from floor {start_floor}")
+
     attempts = 0
     did_break = False
     breaking_floor = None
@@ -86,6 +116,7 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
     max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
     if max_force <= plate_strength:
         # If the max force doesn't break the plate, exit early
+        logging.debug("Maximum force doesn't break the plate. Exiting early.")
         return attempts, did_break, breaking_floor
 
     # Set initial high and low bounds for halving
@@ -110,6 +141,8 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
         # Update the floor based on new high and low
         floor = (low + high) // 2
 
+        logging.debug(f"Current floor: {floor}, Low bound: {low}, High bound: {high}")
+
     # Check the floor if low and high have converged
     if low == high:
         attempts += 1
@@ -120,6 +153,7 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
 
     # If the halving strategy did not find a breaking floor, perform a linear search upwards
     if not did_break:
+        logging.debug("No break found in halving strategy. Switching to linear search upwards.")
         for f in range(start_floor, len(floor_heights)):
             current_force = calculate_impact_force(cumulative_height(floor_heights, f), ball_weight)
             attempts += 1
@@ -129,12 +163,15 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
                 break
 
     # Verify the breaking floor by checking the floor below, if a breaking floor was found
-    if did_break and breaking_floor is not None and breaking_floor > 0:
+    if did_break and breaking_floor is not None and breaking_floor > 1:
         current_force = calculate_impact_force(cumulative_height(floor_heights, breaking_floor - 1), ball_weight)
         attempts += 1
         if current_force <= plate_strength:
             breaking_floor -= 1
 
+    logging.debug(
+        f"Precise Halving Strategy Result: {attempts} attempts, Break occurred: {did_break}, "
+        f"Breaking floor: {breaking_floor}")
     return attempts, did_break, breaking_floor
 
 
@@ -147,6 +184,8 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
     :param start_floor:
     :return:
     """
+    logging.debug(f"Starting Binary Search Strategy from floor {start_floor}")
+
     attempts = 0
     did_break = False
     breaking_floor = None
@@ -155,6 +194,7 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
     max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
     if max_force <= plate_strength:
         # If the max force doesn't break the plate, exit early
+        logging.debug("Maximum force doesn't break the plate. Exiting early.")
         return attempts, did_break, breaking_floor
 
     low = 0
@@ -171,6 +211,7 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
         breaking_floor = start_floor
         # Since the plate broke at the starting floor, search downwards for the actual breaking floor
         while breaking_floor > 1:
+            logging.debug(f"Searching between floors {low} and {high}, Current floor: {breaking_floor}")
             breaking_floor -= 1
             current_force = calculate_impact_force(cumulative_height(floor_heights, breaking_floor), ball_weight)
             attempts += 1
@@ -178,11 +219,11 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
                 breaking_floor += 1
                 # Found the actual breaking floor
                 break
-
     else:
         # If the plate does not break at the starting floor, perform binary search upwards
         low = start_floor + 1
         while low <= high:
+            logging.debug(f"Searching between floors {low} and {high}")
             mid = (low + high) // 2
             attempts += 1
             current_force = calculate_impact_force(cumulative_height(floor_heights, mid), ball_weight)
@@ -194,6 +235,8 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
             else:
                 low = mid + 1
 
+    logging.debug(
+        f"Binary Search Result: {attempts} attempts, Break occurred: {did_break}, Breaking floor: {breaking_floor}")
     return attempts, did_break, breaking_floor
 
 
@@ -374,7 +417,7 @@ def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot,
 
 if __name__ == '__main__':
     # Adjustable variables
-    NUM_ITERATIONS = 1  # Number of iterations to run the simulation | Default: 10000
+    NUM_ITERATIONS = 10000  # Number of iterations to run the simulation | Default: 10000
     BALL_WEIGHT_RANGE = (0.01, 2)  # Ball weight range in kg (e.g., from 50g to 100kg) | Default: (0.01, 2)
     PLATE_STRENGTH_RANGE = (0.1, 100)  # Plate strength range in Newtons | Default: (0.1, 100)
     FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters | Default: (1, 11)
@@ -383,6 +426,7 @@ if __name__ == '__main__':
     strategies = [linear_search_simulation_with_flag, precise_halving_strategy_simulation_with_flag,
                   binary_search_strategy]
 
+    logging.info("Starting the simulation.")
     # Run the simulation
     simulation_results = run_simulation_with_adjusted_parameters(NUM_ITERATIONS, BALL_WEIGHT_RANGE,
                                                                  PLATE_STRENGTH_RANGE,
@@ -393,11 +437,11 @@ if __name__ == '__main__':
 
     # Calculate the floor with the most breaks and its number of breaks
     most_breaks_floor, most_breaks = find_floor_with_most_breaks(simulation_results)
-    print(f"Floor with Most Breaks: {most_breaks_floor}, Number of Breaks: {most_breaks}")
+    logging.info(f"Floor with Most Breaks: {most_breaks_floor}, Number of Breaks: {most_breaks}")
 
     # Calculate the most efficient floor and its efficiency score
     most_efficient_floor, efficiency_score = find_most_efficient_floor_from_results(simulation_results)
-    print(f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score}")
+    logging.info(f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score}")
 
     # Calculate the average ball weight and floor height used in the simulation
     avg_ball_weight = sum(BALL_WEIGHT_RANGE) / 2  # Average of the BALL_WEIGHT_RANGE
@@ -407,3 +451,5 @@ if __name__ == '__main__':
     # Plot the results
     plot_simulation_results(simulation_results, avg_ball_weight, avg_plate_strength, avg_floor_height,
                             most_efficient_floor, efficiency_score, NUM_ITERATIONS)
+
+    logging.info("Simulation completed.")

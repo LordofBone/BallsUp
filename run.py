@@ -1,3 +1,4 @@
+import argparse
 import logging
 import math
 import random
@@ -161,14 +162,6 @@ def precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, pl
                 did_break = True
                 breaking_floor = f
                 break
-
-    # Verify the breaking floor by checking the floor below, if a breaking floor was found
-    # if did_break and breaking_floor is not None and breaking_floor > 1:
-    #     current_force = calculate_impact_force(cumulative_height(floor_heights, breaking_floor - 1), ball_weight)
-    #     attempts += 1
-    #     if current_force <= plate_strength:
-    #         # breaking_floor -= 1
-    #         breaking_floor = breaking_floor
 
     logging.debug(
         f"Precise Halving Strategy Result: {attempts} attempts, Break occurred: {did_break}, "
@@ -417,11 +410,24 @@ def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot,
 
 
 if __name__ == '__main__':
-    # Adjustable variables
-    NUM_ITERATIONS = 1000  # Number of iterations to run the simulation | Default: 10000
-    BALL_WEIGHT_RANGE = (0.01, 2)  # Ball weight range in kg (e.g., from 50g to 100kg) | Default: (0.01, 2)
-    PLATE_STRENGTH_RANGE = (0.1, 100)  # Plate strength range in Newtons | Default: (0.1, 100)
-    FLOOR_HEIGHT_RANGE = (1, 11)  # Floor height range in meters | Default: (1, 11)
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description="Run the plate break simulation.")
+    parser.add_argument("--num_iterations", type=int, default=1000,
+                        help="Number of iterations to run the simulation.")
+    parser.add_argument("--ball_weight_min", type=float, default=0.5, help="Minimum ball weight in kg.")
+    parser.add_argument("--ball_weight_max", type=float, default=1.5, help="Maximum ball weight in kg.")
+    parser.add_argument("--plate_strength_min", type=float, default=40, help="Minimum plate strength in Newtons.")
+    parser.add_argument("--plate_strength_max", type=float, default=70, help="Maximum plate strength in Newtons.")
+    parser.add_argument("--floor_height_min", type=float, default=1, help="Minimum floor height in meters.")
+    parser.add_argument("--floor_height_max", type=float, default=3, help="Maximum floor height in meters.")
+
+    args = parser.parse_args()
+
+    # Extract values from args
+    NUM_ITERATIONS = args.num_iterations
+    BALL_WEIGHT_RANGE = (args.ball_weight_min, args.ball_weight_max)
+    PLATE_STRENGTH_RANGE = (args.plate_strength_min, args.plate_strength_max)
+    FLOOR_HEIGHT_RANGE = (args.floor_height_min, args.floor_height_max)
 
     # List of strategies
     strategies = [linear_search_simulation_with_flag, precise_halving_strategy_simulation_with_flag,

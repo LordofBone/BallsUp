@@ -26,6 +26,21 @@ To get started with BallsUp, you need to have Python installed on your system al
 ```bash
 git clone https://github.com/LordofBone/BallsUp.git
 cd BallsUp
+```
+
+2. Create Python virtual environment (optional):
+```bash
+python -m venv venv
+```
+
+3. Activate virtual environment and install requirements (optional):
+```bash
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Or you can install the requirements globally (non-virtual environment) like so:
+```bash
 pip install -r requirements.txt
 ```
 

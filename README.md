@@ -48,7 +48,7 @@ FLOOR_HEIGHT_RANGE = (1, 3)  # Floor height range in meters | Default: (1, 3)
 
 They can also be ajusted like so:
 ```bash
-python simulation.py --num_iterations 5000 --ball_weight_min 0.3 --ball_weight_max 2.0 --plate_strength_min 30 --plate_strength_max 80
+python run.py --num_iterations 5000 --ball_weight_min 0.3 --ball_weight_max 2.0 --plate_strength_min 30 --plate_strength_max 80
 ```
 
 Tests can be run with the following command:

@@ -33,7 +33,7 @@ pip install -r requirements.txt
 
 To run the simulation, execute the main script:
 ```bash
-python simulation.py
+python run.py
 ```
 
 You can adjust the simulation parameters by editing the simulation.py file or by setting the variables at runtime.

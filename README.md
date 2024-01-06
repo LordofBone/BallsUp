@@ -80,6 +80,20 @@ The Linear Search strategy involves sequentially checking each floor, either mov
 This method is straightforward and exhaustive, as it checks every floor until it finds the exact point where the plate breaks. 
 While potentially slower than other methods, it guarantees finding the precise breaking point.
 
+## Determining the Most Efficient Floor
+
+The simulation includes a function `find_most_efficient_floor_from_results` to determine the most efficient floor to start the ball drop from. 
+This function calculates an efficiency score for each floor based on the results of the simulation. Here's how it works:
+
+1. **Efficiency Score Calculation**: The efficiency score for each floor is calculated by dividing the average number of attempts (to find the breaking point) by the break percentage at that floor. The break percentage is the ratio of the number of times the plate breaks when dropped from that floor to the total number of drops from that floor. This score aims to balance the need for a high chance of breaking the plate against the desire to minimize the number of attempts.
+
+2. **Handling Zero Breaks**: If there are no breaks from a particular floor (which would lead to a division by zero), the efficiency score for that floor is set to infinity. This effectively ranks floors with no breaks as the least efficient.
+
+3. **Identifying the Most Efficient Floor**: The floor with the lowest efficiency score is identified as the most efficient starting floor. A lower score indicates that fewer attempts are needed on average to break the plate, while still maintaining a high likelihood of breakage.
+
+This approach provides a balanced measure of efficiency, taking into account both the effectiveness of breaking the plate and the effort (number of attempts) required to achieve this outcome. The most efficient floor is thus the one that optimizes these two factors.
+
+
 ## Contributing
 
 Contributions to the project are welcome! Please fork the repository and submit a pull request with your changes.

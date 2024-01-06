@@ -6,6 +6,7 @@ from run import calculate_impact_force, linear_search_simulation_with_flag, \
 
 
 class TestBallDropSimulation(unittest.TestCase):
+    # todo: parameterize tests and make things more DRY
 
     def test_calculate_impact_force(self):
         # Test with known values

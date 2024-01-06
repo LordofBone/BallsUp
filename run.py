@@ -4,6 +4,9 @@ import math
 import random
 from pprint import pprint
 
+import matplotlib
+
+matplotlib.use('Qt5Agg')  # Or another backend like 'GTK3Agg', 'WXAgg', etc.
 import matplotlib.pyplot as plt
 
 # Setup logging
@@ -406,6 +409,9 @@ def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot,
 
     # Display the plot
     plt.tight_layout()
+    # Get the current figure's manager for Qt backend
+    manager = plt.get_current_fig_manager()
+    manager.window.showMaximized()  # Maximizes the window for Qt5
     plt.show()
 
 

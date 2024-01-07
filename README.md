@@ -28,15 +28,6 @@ git clone https://github.com/LordofBone/BallsUp.git
 cd BallsUp
 ```
 
-Then if you are running on RPi run:
-```bash
-git fetch origin
-git checkout rpi_edition
-```
-
-(This is because I used PyQt5 for the backend for a cleaner look and starting maximised, but this is not supported on RPi
-so the RPi edition uses the default backend instead)
-
 2. Create Python virtual environment (optional):
 ```bash
 python -m venv venv
@@ -84,7 +75,7 @@ python run_tests.py
 
 ### Results
 
-The results will then be show as a matplotlib graph and a text output in the console.
+The results will then be shown as a Matplotlib graph and text output in the console. Matplotlib selects an available interactive backend for the system, so the same application can run on desktop Linux, Windows, macOS, and Raspberry Pi OS with a graphical desktop.
 It will show the average number of attempts required to find the critical floor for all the strategies, as well as the break percentage for each floor, 
 total breaks of each floor and the efficiency score for each floor.
 

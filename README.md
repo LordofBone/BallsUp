@@ -97,7 +97,8 @@ This method efficiently zeroes in on the critical breaking point.
 ### Halving
 The Halving strategy is a heuristic approach that starts from a specific floor and then halves the distance to the ground, 
 either moving up or down based on whether the plate breaks. The process repeats, halving the distance each time, 
-until it hones in on the floor just high enough to break the plate. This strategy is a quick way to approximate the breaking point.
+until it hones in on the floor just high enough to break the plate. This strategy is a quick way to approximate the breaking point as a start, 
+but then it linearly counts to find the exact floor as a final fine tune.
 
 ### Linear Search
 The Linear Search strategy involves sequentially checking each floor, either moving upwards or downwards from a starting point. 

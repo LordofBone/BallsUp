@@ -28,6 +28,15 @@ git clone https://github.com/LordofBone/BallsUp.git
 cd BallsUp
 ```
 
+Then if you are running on RPi run:
+```bash
+git fetch origin
+git checkout rpi_edition
+```
+
+(This is because I used PyQt5 for the backend for a cleaner look and starting maximised, but this is not supported on RPi
+so the RPi edition uses the default backend instead)
+
 2. Create Python virtual environment (optional):
 ```bash
 python -m venv venv

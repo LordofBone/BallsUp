@@ -1,17 +1,24 @@
 import unittest
+import logging
 
 from run import calculate_impact_force, linear_search_simulation_with_flag, \
     precise_halving_strategy_simulation_with_flag, binary_search_strategy, find_most_efficient_floor_from_results, \
     cumulative_height, run_simulation_with_adjusted_parameters, find_floor_with_most_breaks
 
+# Setup logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class TestBallDropSimulation(unittest.TestCase):
     # todo: parameterize tests and make things more DRY
 
     def test_calculate_impact_force(self):
         # Test with known values
-        self.assertAlmostEqual(calculate_impact_force(10, 1), 14.0,
+        self.assertAlmostEqual(calculate_impact_force(10, 1), 1400.0,
                                places=2)
+        self.assertAlmostEqual(calculate_impact_force(10, 1, 0.02), 700.0, places=2)
+
+        with self.assertRaises(ValueError):
+            calculate_impact_force(-1, 1)
 
     def test_cumulative_height(self):
         floor_heights = [0.1, 1.2, 5, 7.1, 10]
@@ -20,11 +27,55 @@ class TestBallDropSimulation(unittest.TestCase):
         self.assertAlmostEqual(cumulative_height(floor_heights, 5), 23.4,
                                places=2)
 
+    def test_linear_search_simulation_with_flag_start_on_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 0.91  # 0.91 kg
+        plate_strength = 400  # Can withstand a force of 400 Newtons
+        start_floor = 1
+
+        expected_attempts = 2
+        expected_did_break = True
+        expected_break_floor = 1
+        self.assertEqual((expected_attempts, expected_did_break, expected_break_floor),
+                         linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor)
+                         )
+
+    def test_precise_halving_strategy_simulation_with_flag_start_on_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 0.91  # 0.91 kg
+        plate_strength = 400  # Can withstand a force of 400 Newtons
+        start_floor = 1
+
+        expected_attempts = 2
+        expected_did_break = True
+        expected_break_floor = 1
+        self.assertEqual((expected_attempts, expected_did_break, expected_break_floor),
+                         precise_halving_strategy_simulation_with_flag(floor_heights, ball_weight, plate_strength,
+                                                                       start_floor)
+                         )
+
+    def test_binary_search_strategy_start_on_break_floor(self):
+        # Set up a test case
+        floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
+        ball_weight = 0.91  # 0.91 kg
+        plate_strength = 400  # Can withstand a force of 400 Newtons
+        start_floor = 1
+
+        expected_attempts = 1
+        expected_did_break = True
+        expected_break_floor = 1
+        self.assertEqual((expected_attempts, expected_did_break, expected_break_floor),
+                         binary_search_strategy(floor_heights, ball_weight, plate_strength, start_floor)
+                         )
+
+
     def test_linear_search_simulation_with_flag_low_break(self):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
         start_floor = 50
 
         expected_attempts = 51
@@ -38,7 +89,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
         start_floor = 50
 
         expected_attempts = 7
@@ -53,10 +104,10 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
         start_floor = 50
 
-        expected_attempts = 50
+        expected_attempts = 6
         expected_did_break = True
         expected_break_floor = 1
         self.assertEqual((expected_attempts, expected_did_break, expected_break_floor),
@@ -67,7 +118,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
         start_floor = 50
 
         expected_attempts = 2
@@ -81,7 +132,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
         start_floor = 50
 
         expected_attempts = 7
@@ -96,10 +147,10 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
         start_floor = 50
 
-        expected_attempts = 2
+        expected_attempts = 7
         expected_did_break = True
         expected_break_floor = 50
         self.assertEqual((expected_attempts, expected_did_break, expected_break_floor),
@@ -110,7 +161,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 51
@@ -120,11 +171,18 @@ class TestBallDropSimulation(unittest.TestCase):
                          linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strength, start_floor)
                          )
 
+    def test_linear_search_beyond_floor_100(self):
+        floor_heights = [1] * 150
+        plate_strength = calculate_impact_force(119, 1)
+
+        self.assertEqual((71, True, 120), linear_search_simulation_with_flag(
+            floor_heights, 1, plate_strength, 50))
+
     def test_precise_halving_strategy_simulation_with_flag_high_break(self):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 7
@@ -139,7 +197,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 7
@@ -153,7 +211,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
 
         expected_did_break = True
         expected_break_floor = 1
@@ -172,7 +230,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
 
         expected_did_break = True
         expected_break_floor = 1
@@ -191,7 +249,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.91  # 0.91 kg
-        plate_strength = 4  # Can withstand a force of 4 Newtons
+        plate_strength = 400  # Can withstand a force of 400 Newtons
 
         expected_did_break = True
         expected_break_floor = 1
@@ -210,7 +268,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
 
         expected_did_break = True
         expected_break_floor = 50
@@ -229,7 +287,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
 
         expected_did_break = True
         expected_break_floor = 50
@@ -248,7 +306,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 1  # 1 kg
-        plate_strength = 31  # Can withstand a force of 31 Newtons
+        plate_strength = 3100  # Can withstand a force of 3100 Newtons
 
         expected_did_break = True
         expected_break_floor = 50
@@ -267,7 +325,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
 
         expected_did_break = True
         expected_break_floor = 100
@@ -286,7 +344,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
 
         expected_did_break = True
         expected_break_floor = 100
@@ -305,7 +363,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.994  # 0.994 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
 
         expected_did_break = True
         expected_break_floor = 100
@@ -324,7 +382,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.993  # 0.993 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 0
@@ -338,7 +396,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.993  # 0.993 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 0
@@ -353,7 +411,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         floor_heights = [1 for _ in range(100)]  # All floors are 1 meter high
         ball_weight = 0.993  # 0.993 kg
-        plate_strength = 44  # Can withstand a force of 44 Newtons
+        plate_strength = 4400  # Can withstand a force of 4400 Newtons
         start_floor = 50
 
         expected_attempts = 0
@@ -417,7 +475,7 @@ class TestBallDropSimulation(unittest.TestCase):
         # Set up a test case
         num_iterations = 1  # Number of iterations
         ball_weight_range = (0.91, 0.91)  # Ball weight
-        plate_strength_range = (4, 4)  # Plate strength
+        plate_strength_range = (400, 400)  # Plate strength
         floor_height_range = (1, 1)  # Floor height
 
         # List of strategies
@@ -438,13 +496,13 @@ class TestBallDropSimulation(unittest.TestCase):
         self.assertEqual(1, most_breaks_floor)
         self.assertEqual(300, most_breaks)
         self.assertEqual(1, most_efficient_floor)
-        self.assertEqual(0.6012777777777779, efficiency_score)
+        self.assertEqual(0.016666666666666666, efficiency_score)
 
     def test_full_simulation_mid(self):
         # Set up a test case
         num_iterations = 1  # Number of iterations
         ball_weight_range = (1, 1)  # Ball weight
-        plate_strength_range = (31, 31)  # Plate strength
+        plate_strength_range = (3100, 3100)  # Plate strength
         floor_height_range = (1, 1)  # Floor height
 
         # List of strategies
@@ -456,6 +514,10 @@ class TestBallDropSimulation(unittest.TestCase):
                                                                      plate_strength_range,
                                                                      floor_height_range, strategies)
 
+        self.assertEqual(0, simulation_results[49]['break_percentage'])
+        self.assertEqual(100, simulation_results[50]['break_percentage'])
+        self.assertEqual(300, simulation_results[50]['breaks'])
+
         # Calculate the floor with the most breaks and its number of breaks
         most_breaks_floor, most_breaks = find_floor_with_most_breaks(simulation_results)
 
@@ -465,13 +527,13 @@ class TestBallDropSimulation(unittest.TestCase):
         self.assertEqual(50, most_breaks_floor)
         self.assertEqual(300, most_breaks)
         self.assertEqual(50, most_efficient_floor)
-        self.assertEqual(0.6251666666666666, efficiency_score)
+        self.assertEqual(0.05333333333333333, efficiency_score)
 
     def test_full_simulation_high(self):
         # Set up a test case
         num_iterations = 1  # Number of iterations
         ball_weight_range = (0.994, 0.994)  # Ball weight
-        plate_strength_range = (44, 44)  # Plate strength
+        plate_strength_range = (4400, 4400)  # Plate strength
         floor_height_range = (1, 1)  # Floor height
 
         # List of strategies
@@ -492,13 +554,13 @@ class TestBallDropSimulation(unittest.TestCase):
         self.assertEqual(100, most_breaks_floor)
         self.assertEqual(300, most_breaks)
         self.assertEqual(100, most_efficient_floor)
-        self.assertEqual(0.8539999999999999, efficiency_score)
+        self.assertEqual(0.06, efficiency_score)
 
     def test_full_simulation_no_break(self):
         # Set up a test case
         num_iterations = 1  # Number of iterations
         ball_weight_range = (0.993, 0.993)  # Ball weight
-        plate_strength_range = (44, 44)  # Plate strength
+        plate_strength_range = (4400, 4400)  # Plate strength
         floor_height_range = (1, 1)  # Floor height
 
         # List of strategies
@@ -520,6 +582,16 @@ class TestBallDropSimulation(unittest.TestCase):
         self.assertEqual(0, most_breaks)
         self.assertEqual(1, most_efficient_floor)
         self.assertEqual(float('inf'), efficiency_score)
+
+    def test_simulation_rejects_invalid_parameters(self):
+        valid_arguments = ((1, 1), (400, 400), (1, 1), [binary_search_strategy])
+        for iterations in (0, -1, 10001):
+            with self.subTest(iterations=iterations), self.assertRaises(ValueError):
+                run_simulation_with_adjusted_parameters(iterations, *valid_arguments)
+
+        with self.assertRaises(ValueError):
+            run_simulation_with_adjusted_parameters(1, (1, 1), (400, 400), (-1, 1),
+                                                    [binary_search_strategy])
 
 
 if __name__ == '__main__':

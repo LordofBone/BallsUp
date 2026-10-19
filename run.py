@@ -12,17 +12,24 @@ import matplotlib.pyplot as plt
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+IMPACT_DURATION_SECONDS = 0.01
+MAX_ITERATIONS = 10000
 
-def calculate_impact_force(height, weight):
+
+def calculate_impact_force(height, weight, impact_duration=IMPACT_DURATION_SECONDS):
     """
     Calculate the impact force of the ball.
     :param height: Drop height in meters.
     :param weight: Weight of the ball in kg.
+    :param impact_duration: Time taken to stop the ball in seconds.
     :return: Impact force in Newtons.
     """
+    if (not all(math.isfinite(value) for value in (height, weight, impact_duration))
+            or height < 0 or weight <= 0 or impact_duration <= 0):
+        raise ValueError("height must be non-negative; weight and impact duration must be positive and finite")
     g = 9.8  # Gravity in m/s^2
     velocity = math.sqrt(2 * g * height)
-    force = weight * velocity
+    force = weight * velocity / impact_duration
     logging.debug(f"Calculated impact force: Height = {height} m, Weight = {weight} kg, Force = {force} N")
     return force
 
@@ -71,6 +78,8 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
     if initial_break:
         # If it breaks, go down to find the minimum breaking floor
         logging.debug("Initial break detected. Searching downwards for minimum breaking floor.")
+
+        did_break = True
         while floor > 0:
             attempts += 1
             floor -= 1
@@ -78,14 +87,13 @@ def linear_search_simulation_with_flag(floor_heights, ball_weight, plate_strengt
 
             if current_force <= plate_strength:
                 # Found the floor just before it stops breaking
-                did_break = True
                 floor += 1
                 breaking_floor = floor
                 break
     else:
         # If it doesn't break, go up to find the breaking floor
         logging.debug("No initial break. Searching upwards for breaking floor.")
-        while floor < 100:
+        while floor < len(floor_heights):
 
             attempts += 1
             current_force = calculate_impact_force(cumulative_height(floor_heights, floor + 1), ball_weight)
@@ -196,9 +204,6 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
 
     low = 0
     high = len(floor_heights)
-    attempts = 0
-    did_break = False
-    breaking_floor = None
 
     # Check if the starting floor breaks the plate
     current_force = calculate_impact_force(cumulative_height(floor_heights, start_floor), ball_weight)
@@ -206,16 +211,17 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
     if current_force > plate_strength:
         did_break = True
         breaking_floor = start_floor
-        # Since the plate broke at the starting floor, search downwards for the actual breaking floor
-        while breaking_floor > 1:
-            logging.debug(f"Searching between floors {low} and {high}, Current floor: {breaking_floor}")
-            breaking_floor -= 1
-            current_force = calculate_impact_force(cumulative_height(floor_heights, breaking_floor), ball_weight)
+        low = 1
+        high = start_floor - 1
+        while low <= high:
+            mid = (low + high) // 2
+            current_force = calculate_impact_force(cumulative_height(floor_heights, mid), ball_weight)
             attempts += 1
-            if current_force <= plate_strength:
-                breaking_floor += 1
-                # Found the actual breaking floor
-                break
+            if current_force > plate_strength:
+                breaking_floor = mid
+                high = mid - 1
+            else:
+                low = mid + 1
     else:
         # If the plate does not break at the starting floor, perform binary search upwards
         low = start_floor + 1
@@ -248,7 +254,18 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
     :param strategy_roster: List of strategy functions to use in the simulation.
     :return: Aggregated results for each starting floor and each strategy.
     """
-    aggregated_results = {floor: {'attempts': 0, 'breaks': 0} for floor in range(1, 101)}
+    if not isinstance(num_iterations, int) or not 1 <= num_iterations <= MAX_ITERATIONS:
+        raise ValueError(f"num_iterations must be between 1 and {MAX_ITERATIONS}")
+    for name, value_range in (("ball_weight_range", ball_weight_range),
+                              ("plate_strength_range", plate_strength_range),
+                              ("floor_height_range", floor_height_range)):
+        if (len(value_range) != 2 or not all(math.isfinite(value) and value > 0 for value in value_range)
+                or value_range[0] > value_range[1]):
+            raise ValueError(f"{name} must contain two positive, finite values in ascending order")
+    if not strategy_roster:
+        raise ValueError("strategy_roster must not be empty")
+
+    aggregated_results = {floor: {'attempts': 0, 'breaks': 0, 'starting_breaks': 0} for floor in range(1, 101)}
     break_results = {floor: {'breaks': 0} for floor in range(1, 101)}
     total_strategy_executions = num_iterations * len(strategy_roster)
 
@@ -258,13 +275,13 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
         plate_strength = random.uniform(*plate_strength_range)
 
         for floor in range(1, 101):
+            if calculate_impact_force(cumulative_height(floor_heights, floor), ball_weight) > plate_strength:
+                aggregated_results[floor]['starting_breaks'] += 1
             for strategy in strategy_roster:
                 attempts, did_break, breaking_floor = strategy(floor_heights, ball_weight, plate_strength, floor)
                 aggregated_results[floor]['attempts'] += attempts
                 if did_break:
                     break_results[breaking_floor]['breaks'] += 1
-
-    total_attempts = sum(data['attempts'] for floor, data in aggregated_results.items())
 
     # Calculate average attempts and break percentage for each floor
     for floor in aggregated_results:
@@ -273,10 +290,8 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
 
         aggregated_results[floor]['breaks'] = (break_results[floor]['breaks'])
 
-        try:
-            aggregated_results[floor]['break_percentage'] = (aggregated_results[floor]['breaks'] / total_attempts) * 100
-        except ZeroDivisionError:
-            aggregated_results[floor]['break_percentage'] = 0
+        aggregated_results[floor]['break_percentage'] = (
+            aggregated_results[floor]['starting_breaks'] / num_iterations) * 100
 
     return aggregated_results
 
@@ -422,8 +437,8 @@ if __name__ == '__main__':
                         help="Number of iterations to run the simulation.")
     parser.add_argument("--ball_weight_min", type=float, default=0.5, help="Minimum ball weight in kg.")
     parser.add_argument("--ball_weight_max", type=float, default=1.5, help="Maximum ball weight in kg.")
-    parser.add_argument("--plate_strength_min", type=float, default=40, help="Minimum plate strength in Newtons.")
-    parser.add_argument("--plate_strength_max", type=float, default=70, help="Maximum plate strength in Newtons.")
+    parser.add_argument("--plate_strength_min", type=float, default=4000, help="Minimum plate strength in Newtons.")
+    parser.add_argument("--plate_strength_max", type=float, default=7000, help="Maximum plate strength in Newtons.")
     parser.add_argument("--floor_height_min", type=float, default=1, help="Minimum floor height in meters.")
     parser.add_argument("--floor_height_max", type=float, default=3, help="Maximum floor height in meters.")
 

@@ -17,7 +17,7 @@ To get started with BallsUp, you need to have Python installed on your system al
 
 ### Prerequisites
 
-- Python 3.6 or higher
+- Python 3.10 or higher
 - Pip (Python package installer)
 
 ### Installation
@@ -66,13 +66,15 @@ The simulation parameters are as follows:
 ```python
 NUM_ITERATIONS = 1000  # Number of iterations to run the simulation | Default: 1000
 BALL_WEIGHT_RANGE = (0.5, 1.5)  # Ball weight range in kg | Default: (0.5, 1.5)
-PLATE_STRENGTH_RANGE = (40, 70)  # Plate strength range in Newtons | Default: (40, 70)
+PLATE_STRENGTH_RANGE = (4000, 7000)  # Plate strength range in Newtons | Default: (4000, 7000)
 FLOOR_HEIGHT_RANGE = (1, 3)  # Floor height range in meters | Default: (1, 3)
 ```
 
+The force estimate assumes the ball stops in 0.01 seconds after impact. `NUM_ITERATIONS` must be between 1 and 10,000; range endpoints must be positive, finite, and in ascending order.
+
 They can also be adjusted like so:
 ```bash
-python run.py --num_iterations 5000 --ball_weight_min 0.3 --ball_weight_max 2.0 --plate_strength_min 30 --plate_strength_max 80 --floor_height_min 0.5 --floor_height_max 5.0
+python run.py --num_iterations 5000 --ball_weight_min 0.3 --ball_weight_max 2.0 --plate_strength_min 3000 --plate_strength_max 8000 --floor_height_min 0.5 --floor_height_max 5.0
 ```
 
 Tests can be run with the following command:
@@ -112,7 +114,7 @@ This function calculates an efficiency score for each floor based on the results
 
 1. **Efficiency Score Calculation**: The efficiency score for each floor is calculated by dividing the average number of attempts (to find the breaking point) by the break percentage at that floor. The break percentage is the ratio of the number of times the plate breaks when dropped from that floor to the total number of drops from that floor. This score aims to balance the need for a high chance of breaking the plate against the desire to minimize the number of attempts.
 
-2. **Handling Zero Breaks**: If there are no breaks from a particular floor (which would lead to a division by zero), the efficiency score for that floor is set to infinity. This effectively ranks floors with no breaks as the least efficient.
+2. **Handling Zero Breaks**: If there are no breaks from a particular starting floor (which would lead to a division by zero), the efficiency score for that floor is set to infinity. This effectively ranks floors with no breaks as the least efficient.
 
 3. **Identifying the Most Efficient Floor**: The floor with the lowest efficiency score is identified as the most efficient starting floor. A lower score indicates that fewer attempts are needed on average to break the plate, while still maintaining a high likelihood of breakage.
 

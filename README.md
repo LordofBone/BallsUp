@@ -75,7 +75,7 @@ python run_tests.py
 
 ### Results
 
-The results will then be shown as a Matplotlib graph and text output in the console. Matplotlib selects an available interactive backend for the system, so the same application can run on desktop Linux, Windows, macOS, and Raspberry Pi OS with a graphical desktop.
+The results will then be shown as a Matplotlib graph and text output in the console. Matplotlib automatically selects an available backend on desktop Linux, Windows, macOS, and Raspberry Pi OS. Displaying the graph requires a graphical session and a supported Python GUI toolkit, which the pip requirements do not install. For the system Python on Debian, Ubuntu, or Raspberry Pi OS, install Tk support with `sudo apt install python3-tk` if no other supported GUI toolkit is available. Without a usable interactive backend, Matplotlib can fall back to Agg and no graph window will open.
 It will show the average number of attempts required to find the critical floor for all the strategies, as well as the break percentage for each floor, 
 total breaks of each floor and the efficiency score for each floor.
 

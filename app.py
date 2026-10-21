@@ -45,7 +45,7 @@ def make_chart(results, field, title, label, color, best_floor, bar=False):
     if bar:
         axes.bar(floors, values, color=color, width=0.8, alpha=0.9)
     else:
-        axes.plot(floors, values, color=color, linewidth=2.3)
+        axes.plot(floors, values, color=color, linewidth=2.3, marker="o", markersize=3)
         axes.fill_between(floors, values, color=color, alpha=0.12)
     axes.axvline(best_floor, color="#fbbf24", linestyle="--", linewidth=1.4,
                  label=f"Best start · floor {best_floor}")

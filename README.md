@@ -13,11 +13,11 @@ with a configurable range of randomly selected weights of the ball, strengths of
 
 ## Getting Started
 
-To get started with BallsUp, you need to have Python installed on your system along with the necessary libraries such as `numpy`, `matplotlib`, and `Pillow`.
+To get started with BallsUp, install Python 3.11 or newer and the project dependencies.
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 - Pip (Python package installer)
 
 ### Installation
@@ -36,22 +36,29 @@ python -m venv venv
 3. Activate virtual environment and install requirements (optional):
 ```bash
 source venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-gui.txt
 ```
 
 Or you can install the requirements globally (non-virtual environment) like so:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-gui.txt
 ```
 
 ### Usage
 
-To run the simulation, execute the main script:
+To open the browser dashboard, run:
+```bash
+python -m streamlit run app.py
+```
+
+The dashboard opens locally in your browser. Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Run the simulation to see the same four result charts, summary values, the per-floor result table, and a CSV download. Results stay visible while you adjust settings and update when you run again.
+
+To run the original command-line interface, execute:
 ```bash
 python run.py
 ```
 
-You can adjust the simulation parameters by editing the simulation.py file or by setting the variables at runtime.
+If you only need the CLI, install `requirements.txt` instead. You can adjust its parameters with command-line options.
 
 The simulation parameters are as follows:
 ```python
@@ -75,7 +82,7 @@ python run_tests.py
 
 ### Results
 
-The results will then be shown as a Matplotlib graph and text output in the console. Matplotlib automatically selects an available backend on desktop Linux, Windows, macOS, and Raspberry Pi OS. Displaying the graph requires a graphical session and a supported Python GUI toolkit, which the pip requirements do not install. For the system Python on Debian, Ubuntu, or Raspberry Pi OS, install Tk support with `sudo apt install python3-tk` if no other supported GUI toolkit is available. Without a usable interactive backend, Matplotlib can fall back to Agg and no graph window will open.
+The CLI prints the per-floor results and summary in the console and opens a Matplotlib graph. Matplotlib automatically selects an available backend on desktop Linux, Windows, macOS, and Raspberry Pi OS. Displaying the CLI graph requires a graphical session and a supported Python GUI toolkit, which the pip requirements do not install. For the system Python on Debian, Ubuntu, or Raspberry Pi OS, install Tk support with `sudo apt install python3-tk` if no other supported GUI toolkit is available. Without a usable interactive backend, Matplotlib can fall back to Agg and no graph window will open. The browser dashboard renders the charts within the page and does not need a desktop Matplotlib backend.
 It will show the average number of attempts required to find the critical floor for all the strategies, as well as the break percentage for each floor, 
 total breaks of each floor and the efficiency score for each floor.
 

@@ -51,7 +51,19 @@ To open the browser dashboard, run:
 python -m streamlit run app.py
 ```
 
-The dashboard opens locally in your browser. Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Run the simulation to see the same four result charts, summary values, the per-floor result table, and a CSV download. Results stay visible while you adjust settings and update when you run again.
+By default, the dashboard listens on `127.0.0.1` and is accessible only from the machine running it. Open `http://127.0.0.1:8501` in your browser.
+
+To allow access from another device on your network, override the bind address when launching Streamlit. Replace `192.168.1.10` with the IP address of the network interface you want to use.
+
+```bash
+python -m streamlit run app.py --server.address 192.168.1.10
+```
+
+Use `--server.address 0.0.0.0` to listen on all IPv4 interfaces. From another device, open the host's network IP address on port `8501`, for example `http://192.168.1.10:8501`.
+
+> **Warning:** Binding to `0.0.0.0` can expose the dashboard on Wi-Fi, Ethernet, and VPN connections, and potentially to the internet if the host is publicly reachable or a router forwards the port. Keep the default `127.0.0.1` for local use. If you need network access, bind to the intended interface and configure your firewall to allow inbound TCP port `8501` only from trusted devices or subnets. Avoid public firewall rules and router port forwarding for this port.
+
+Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Run the simulation to see the same four result charts, summary values, the per-floor result table, and a CSV download. Results stay visible while you adjust settings and update when you run again.
 
 To run the original command-line interface, execute:
 ```bash

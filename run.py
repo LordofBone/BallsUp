@@ -286,6 +286,10 @@ def run_simulation_by_strategy(num_iterations, ball_weight_range, plate_strength
         ball_weight = random.uniform(*ball_weight_range)
         plate_strength = random.uniform(*plate_strength_range)
 
+        max_force = calculate_impact_force(cumulative_height(floor_heights, len(floor_heights)), ball_weight)
+        if not math.isfinite(max_force):
+            raise ValueError("Input ranges produced a non-finite impact force; reduce ball weight or floor height.")
+
         for floor in floors:
             if calculate_impact_force(cumulative_height(floor_heights, floor), ball_weight) > plate_strength:
                 starting_breaks[floor] += 1

@@ -33,8 +33,6 @@ def make_chart(results, field, title, label, color, best_floor, bar=False):
     else:
         axes.plot(floors, values, color=color, linewidth=2.3, marker="o", markersize=3)
         axes.fill_between(floors, values, color=color, alpha=0.12)
-    axes.axvline(best_floor, color="#fbbf24", linestyle="--", linewidth=1.4,
-                 label=f"Best start · floor {best_floor}")
     axes.set_title(title, color="#f8fafc", fontsize=13, fontweight="bold", loc="left", pad=16)
     axes.set_xlabel("Starting floor" if field != "breaks" else "Breaking floor", color="#94a3b8")
     axes.set_ylabel(label, color="#94a3b8")
@@ -43,18 +41,23 @@ def make_chart(results, field, title, label, color, best_floor, bar=False):
     axes.set_axisbelow(True)
     for spine in axes.spines.values():
         spine.set_visible(False)
-    axes.legend(facecolor="#1e293b", edgecolor="#334155", labelcolor="#f8fafc", fontsize=8)
+    if best_floor is not None:
+        axes.axvline(best_floor, color="#fbbf24", linestyle="--", linewidth=1.4,
+                     label=f"Best start · floor {best_floor}")
+        axes.legend(facecolor="#1e293b", edgecolor="#334155", labelcolor="#f8fafc", fontsize=8)
     figure.tight_layout()
     return figure
 
 
 def display_results(results, iterations, ranges, strategy_count):
     best_floor, efficiency = find_most_efficient_floor_from_results(results)
+    if not math.isfinite(efficiency):
+        best_floor = None
     most_breaks_floor, most_breaks = find_floor_with_most_breaks(results)
 
     st.subheader("Simulation results")
     columns = st.columns(4)
-    columns[0].metric("Best starting floor", best_floor)
+    columns[0].metric("Best starting floor", best_floor if best_floor is not None else "No qualifying floor")
     columns[1].metric("Efficiency score", f"{efficiency:.6f}" if math.isfinite(efficiency) else "∞")
     columns[2].metric("Most breaks at floor", most_breaks_floor if most_breaks_floor is not None else "—")
     columns[3].metric("Breaks at that floor", f"{most_breaks:,}")

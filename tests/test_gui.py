@@ -101,6 +101,30 @@ class TestDashboard(unittest.TestCase):
         figure = make_chart(results, "breaks", "Breaks", "Count", "#34d399", 2, bar=True)
         self.assertEqual(1, len(figure.axes))
 
+    def test_zero_break_run_has_no_qualifying_floor(self):
+        dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
+        dashboard.number_input[0].set_value(1)
+        dashboard.number_input[1].set_value(0.001)
+        dashboard.number_input[2].set_value(0.001)
+        dashboard.number_input[4].set_value(4000.0)
+        dashboard.number_input[6].set_value(1.0)
+        dashboard.button[0].click()
+
+        with patch("streamlit.pyplot") as pyplot:
+            dashboard.run()
+
+        self.assertFalse(dashboard.exception)
+        self.assertFalse(dashboard.error)
+        self.assertEqual("No qualifying floor", dashboard.metric[0].value)
+        self.assertEqual("∞", dashboard.metric[1].value)
+        self.assertEqual("0", dashboard.metric[3].value)
+        self.assertEqual(4, pyplot.call_count)
+        for chart, expected_lines in zip(pyplot.call_args_list, (1, 1, 0, 1)):
+            axes = chart.args[0].axes[0]
+            with self.subTest(chart=axes.get_title(loc="left")):
+                self.assertIsNone(axes.get_legend())
+                self.assertEqual(expected_lines, len(axes.lines))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,2 +1,2 @@
 -r requirements.txt
-streamlit>=1.66,<2
+streamlit>=1.67.0,<2

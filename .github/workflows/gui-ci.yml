@@ -1,0 +1,32 @@
+name: GUI CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  gui:
+    name: Dashboard tests
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install GUI dependencies
+        run: python -m pip install -r requirements-gui.txt
+      - name: Run dashboard tests and reject skips
+        run: |
+          python - <<'PY'
+          import unittest
+
+          suite = unittest.defaultTestLoader.discover('tests', pattern='test_gui.py')
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          if not result.wasSuccessful():
+              raise SystemExit(1)
+          if not result.testsRun or result.skipped:
+              raise SystemExit('Dashboard tests must execute without skips.')
+          PY

@@ -7,22 +7,8 @@ import math
 import streamlit as st
 from matplotlib.figure import Figure
 
-from run import (
-    MAX_ITERATIONS,
-    binary_search_strategy,
-    find_floor_with_most_breaks,
-    find_most_efficient_floor_from_results,
-    linear_search_simulation_with_flag,
-    precise_halving_strategy_simulation_with_flag,
-    run_simulation_with_adjusted_parameters,
-)
-
-
-STRATEGIES = {
-    "Linear search": linear_search_simulation_with_flag,
-    "Halving": precise_halving_strategy_simulation_with_flag,
-    "Binary search": binary_search_strategy,
-}
+from dashboard_simulation import GUI_MAX_ITERATIONS, STRATEGIES, SimulationBusyError, run_dashboard_simulation
+from run import find_floor_with_most_breaks, find_most_efficient_floor_from_results
 
 
 def results_csv(results):
@@ -121,7 +107,10 @@ def main():
         st.header("Simulation setup")
         st.caption("Set the ranges, then run a fresh simulation.")
         with st.form("simulation"):
-            iterations = st.number_input("Iterations", min_value=1, max_value=MAX_ITERATIONS, value=1000, step=100)
+            iterations = st.number_input(
+                "Iterations", min_value=1, max_value=GUI_MAX_ITERATIONS,
+                value=500, step=100, help="The iteration limit depends on which strategies you select.",
+            )
             st.subheader("Ball weight · kg")
             weight_min = st.number_input("Minimum weight", min_value=0.0, value=0.5, format="%.6f")
             weight_max = st.number_input("Maximum weight", min_value=0.0, value=1.5, format="%.6f")
@@ -136,17 +125,15 @@ def main():
 
     if submitted:
         ranges = ((weight_min, weight_max), (strength_min, strength_max), (height_min, height_max))
-        if not selected:
-            st.error("Select at least one strategy.")
+        try:
+            with st.spinner("Running simulations across 100 floors…"):
+                results = run_dashboard_simulation(iterations, ranges, selected)
+        except ValueError as error:
+            st.error(str(error))
+        except SimulationBusyError as error:
+            st.warning(str(error))
         else:
-            try:
-                with st.spinner("Running simulations across 100 floors…"):
-                    results = run_simulation_with_adjusted_parameters(iterations, *ranges,
-                                                                       [STRATEGIES[name] for name in selected])
-            except ValueError as error:
-                st.error(str(error))
-            else:
-                st.session_state["analysis"] = (results, iterations, ranges, len(selected))
+            st.session_state["analysis"] = (results, iterations, ranges, len(selected))
 
     if "analysis" in st.session_state:
         display_results(*st.session_state["analysis"])

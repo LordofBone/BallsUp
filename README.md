@@ -65,6 +65,19 @@ Use `--server.address 0.0.0.0` to listen on all IPv4 interfaces. From another de
 
 Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Run the simulation to see the same four result charts, summary values, the per-floor result table, and a CSV download. Results stay visible while you adjust settings and update when you run again.
 
+The dashboard allows 6,000 work units per run. Each iteration costs 8 units for linear search, 2 for halving, and 2 for binary search. Add the costs of the selected strategies to get the cost per iteration. This allows 500 iterations with all three strategies, 750 with linear search alone, and 3,000 with either halving or binary search alone. The dashboard starts with 500 iterations and all three strategies selected. Each server process runs one simulation at a time. If the slot is occupied, the dashboard displays a busy message and you can retry.
+
+The following simulation timings are medians of three runs at 100 iterations on a Cortex-A76 with Python 3.13.5. They cover computation across all 100 starting floors and exclude chart rendering. The edge cases fix the ball weight and floor height at 1 kg and 1 m, respectively, with plate strength set to 4,400 N, 1 N, or 10,000 N.
+
+| Settings | Linear search | Halving | Binary search | All three |
+| --- | ---: | ---: | ---: | ---: |
+| Dashboard defaults | 1.331 s | 0.450 s | 0.443 s | 2.092 s |
+| Break at floor 100 | 2.549 s | 0.493 s | 0.478 s | 3.400 s |
+| Break at floor 1 | 2.417 s | 0.430 s | 0.375 s | 3.126 s |
+| No break | 0.116 s | 0.116 s | 0.116 s | 0.246 s |
+
+At the 500-iteration limit with all three strategies, simulation took 10.09 s with the default ranges and 16.82 s in the floor-100 case. Streamlit AppTest measured 11.81 s and 18.12 s from form submission through server-side rendering for those same cases. The budget weights reflect the higher cost of linear search in the edge cases. Actual runtimes depend on the machine and input ranges.
+
 To run the original command-line interface, execute:
 ```bash
 python run.py

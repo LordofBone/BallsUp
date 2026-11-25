@@ -7,7 +7,7 @@ from run import (
     binary_search_strategy,
     linear_search_simulation_with_flag,
     precise_halving_strategy_simulation_with_flag,
-    run_simulation_with_adjusted_parameters,
+    run_simulation_by_strategy,
 )
 
 
@@ -30,14 +30,14 @@ def run_dashboard_simulation(iterations, ranges, selected):
         raise ValueError(f"Iterations must be between 1 and {MAX_ITERATIONS:,}.")
     if not selected:
         raise ValueError("Select at least one strategy.")
-    strategies, weights = zip(*(STRATEGIES[name] for name in selected))
-    max_iterations = GUI_WORK_BUDGET // sum(weights)
+    strategies = {name: STRATEGIES[name][0] for name in selected}
+    max_iterations = GUI_WORK_BUDGET // sum(STRATEGIES[name][1] for name in strategies)
     if iterations > max_iterations:
         raise ValueError(f"The selected strategies allow up to {max_iterations:,} iterations per dashboard run.")
 
     if not _simulation_slots.acquire(blocking=False):
         raise SimulationBusyError("The server is busy running a simulation. Try again in a moment.")
     try:
-        return run_simulation_with_adjusted_parameters(iterations, *ranges, strategies)
+        return run_simulation_by_strategy(iterations, *ranges, strategies)
     finally:
         _simulation_slots.release()

@@ -242,15 +242,27 @@ def binary_search_strategy(floor_heights, ball_weight, plate_strength, start_flo
 
 def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, plate_strength_range, floor_height_range,
                                             strategy_roster):
-    """
-    Run simulations with a dynamic number of strategies.
-    :param num_iterations: Number of iterations to run the simulation.
-    :param ball_weight_range: Tuple representing the range of ball weight in kg.
-    :param plate_strength_range: Tuple representing the range of plate strength in Newtons.
-    :param floor_height_range: Tuple representing the range of floor heights in meters.
-    :param strategy_roster: List of strategy functions to use in the simulation.
-    :return: Aggregated results for each starting floor and each strategy.
-    """
+    """Return pooled per-floor results across the supplied strategies."""
+    by_strategy = run_simulation_by_strategy(
+        num_iterations, ball_weight_range, plate_strength_range, floor_height_range,
+        dict(enumerate(strategy_roster)),
+    )
+    first_result = by_strategy[0]
+    pooled = {}
+    for floor, data in first_result.items():
+        attempts = sum(results[floor]["attempts"] for results in by_strategy.values())
+        pooled[floor] = {
+            **data,
+            "attempts": attempts,
+            "breaks": sum(results[floor]["breaks"] for results in by_strategy.values()),
+            "average_attempts": attempts / (num_iterations * len(by_strategy)),
+        }
+    return pooled
+
+
+def run_simulation_by_strategy(num_iterations, ball_weight_range, plate_strength_range, floor_height_range,
+                               strategy_roster):
+    """Return per-floor results keyed by strategy, using one shared draw per iteration."""
     if not isinstance(num_iterations, int) or not 1 <= num_iterations <= MAX_ITERATIONS:
         raise ValueError(f"num_iterations must be between 1 and {MAX_ITERATIONS}")
     for name, value_range in (("ball_weight_range", ball_weight_range),
@@ -262,35 +274,35 @@ def run_simulation_with_adjusted_parameters(num_iterations, ball_weight_range, p
     if not strategy_roster:
         raise ValueError("strategy_roster must not be empty")
 
-    aggregated_results = {floor: {'attempts': 0, 'breaks': 0, 'starting_breaks': 0} for floor in range(1, 101)}
-    break_results = {floor: {'breaks': 0} for floor in range(1, 101)}
-    total_strategy_executions = num_iterations * len(strategy_roster)
+    floors = range(1, 101)
+    starting_breaks = dict.fromkeys(floors, 0)
+    by_strategy = {
+        name: {floor: {"attempts": 0, "breaks": 0} for floor in floors}
+        for name in strategy_roster
+    }
 
     for _ in range(num_iterations):
-        floor_heights = [random.uniform(*floor_height_range) for _ in range(100)]
+        floor_heights = [random.uniform(*floor_height_range) for _ in floors]
         ball_weight = random.uniform(*ball_weight_range)
         plate_strength = random.uniform(*plate_strength_range)
 
-        for floor in range(1, 101):
+        for floor in floors:
             if calculate_impact_force(cumulative_height(floor_heights, floor), ball_weight) > plate_strength:
-                aggregated_results[floor]['starting_breaks'] += 1
-            for strategy in strategy_roster:
+                starting_breaks[floor] += 1
+            for name, strategy in strategy_roster.items():
                 attempts, did_break, breaking_floor = strategy(floor_heights, ball_weight, plate_strength, floor)
-                aggregated_results[floor]['attempts'] += attempts
+                results = by_strategy[name]
+                results[floor]["attempts"] += attempts
                 if did_break:
-                    break_results[breaking_floor]['breaks'] += 1
+                    results[breaking_floor]["breaks"] += 1
 
-    # Calculate average attempts and break percentage for each floor
-    for floor in aggregated_results:
-        aggregated_results[floor]['average_attempts'] = aggregated_results[floor][
-                                                            'attempts'] / total_strategy_executions
+    for results in by_strategy.values():
+        for floor, data in results.items():
+            data["starting_breaks"] = starting_breaks[floor]
+            data["average_attempts"] = data["attempts"] / num_iterations
+            data["break_percentage"] = starting_breaks[floor] / num_iterations * 100
 
-        aggregated_results[floor]['breaks'] = (break_results[floor]['breaks'])
-
-        aggregated_results[floor]['break_percentage'] = (
-            aggregated_results[floor]['starting_breaks'] / num_iterations) * 100
-
-    return aggregated_results
+    return by_strategy
 
 
 def find_most_efficient_floor_from_results(simulation_results_to_analyze):
@@ -353,7 +365,7 @@ def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot,
         floor, data in simulation_results_to_plot.items()]
 
     # Creating a plot window with 4 subplots
-    plt.figure(figsize=(15, 20))
+    figure = plt.figure(figsize=(15, 20))
 
     # Adjust the font sizes for the titles, labels, and ticks here:
     title_fontsize = 8
@@ -420,6 +432,7 @@ def plot_simulation_results(simulation_results_to_plot, avg_ball_weight_to_plot,
                 bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
 
     # Display the plot
+    figure.suptitle("Results pooled across all strategies")
     plt.tight_layout()
     plt.show()
 
@@ -454,16 +467,16 @@ if __name__ == '__main__':
                                                                  PLATE_STRENGTH_RANGE,
                                                                  FLOOR_HEIGHT_RANGE, strategies)
 
-    # Pretty-print the results
+    print("Results pooled across all strategies", flush=True)
     pprint(simulation_results)
 
     # Calculate the floor with the most breaks and its number of breaks
     most_breaks_floor, most_breaks = find_floor_with_most_breaks(simulation_results)
-    logging.info(f"Floor with Most Breaks: {most_breaks_floor}, Number of Breaks: {most_breaks}")
+    logging.info(f"Pooled Floor with Most Breaks: {most_breaks_floor}, Number of Breaks: {most_breaks}")
 
     # Calculate the most efficient floor and its efficiency score
     most_efficient_floor, efficiency_score = find_most_efficient_floor_from_results(simulation_results)
-    logging.info(f"Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score}")
+    logging.info(f"Pooled Most Efficient Floor: {most_efficient_floor}, Efficiency Score: {efficiency_score}")
 
     # Calculate the average ball weight and floor height used in the simulation
     avg_ball_weight = sum(BALL_WEIGHT_RANGE) / 2  # Average of the BALL_WEIGHT_RANGE

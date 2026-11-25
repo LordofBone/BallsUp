@@ -11,13 +11,13 @@ from dashboard_simulation import GUI_MAX_ITERATIONS, STRATEGIES, SimulationBusyE
 from run import find_floor_with_most_breaks, find_most_efficient_floor_from_results
 
 
-def results_csv(results):
+def results_csv(results, strategy):
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(("floor", "attempts", "breaks", "starting_breaks", "average_attempts", "break_percentage", "efficiency_score"))
+    writer.writerow(("strategy", "floor", "attempts", "breaks", "starting_breaks", "average_attempts", "break_percentage", "efficiency_score"))
     for floor, data in results.items():
         score = data["average_attempts"] / data["break_percentage"] if data["break_percentage"] else math.inf
-        writer.writerow((floor, data["attempts"], data["breaks"], data["starting_breaks"],
+        writer.writerow((strategy, floor, data["attempts"], data["breaks"], data["starting_breaks"],
                          data["average_attempts"], data["break_percentage"], score))
     return output.getvalue()
 
@@ -49,20 +49,26 @@ def make_chart(results, field, title, label, color, best_floor, bar=False):
     return figure
 
 
-def display_results(results, iterations, ranges, strategy_count):
+def display_results(by_strategy, iterations, ranges):
+    st.subheader("Simulation results")
+    st.caption(f"{iterations:,} shared iterations per strategy · mean ball weight {sum(ranges[0]) / 2:g} kg · "
+               f"mean plate strength {sum(ranges[1]) / 2:g} N · mean floor height {sum(ranges[2]) / 2:g} m")
+    for tab, (strategy, results) in zip(st.tabs(list(by_strategy)), by_strategy.items()):
+        with tab:
+            display_strategy_results(strategy, results)
+
+
+def display_strategy_results(strategy, results):
     best_floor, efficiency = find_most_efficient_floor_from_results(results)
     if not math.isfinite(efficiency):
         best_floor = None
     most_breaks_floor, most_breaks = find_floor_with_most_breaks(results)
 
-    st.subheader("Simulation results")
     columns = st.columns(4)
     columns[0].metric("Best starting floor", best_floor if best_floor is not None else "No qualifying floor")
     columns[1].metric("Efficiency score", f"{efficiency:.6f}" if math.isfinite(efficiency) else "∞")
     columns[2].metric("Most breaks at floor", most_breaks_floor if most_breaks_floor is not None else "—")
     columns[3].metric("Breaks at that floor", f"{most_breaks:,}")
-    st.caption(f"{iterations:,} iterations · {strategy_count} strategies · mean ball weight {sum(ranges[0]) / 2:g} kg · "
-               f"mean plate strength {sum(ranges[1]) / 2:g} N · mean floor height {sum(ranges[2]) / 2:g} m")
 
     chart_specs = (
         ("average_attempts", "Average attempts per starting floor", "Attempts", "#38bdf8", False),
@@ -89,7 +95,8 @@ def display_results(results, iterations, ranges, strategy_count):
                      if data["break_percentage"] else math.inf)
                 for floor, data in results.items()]
         st.dataframe(rows, hide_index=True, width="stretch")
-        st.download_button("Download CSV", results_csv(results), "ballsup-results.csv", "text/csv")
+        filename = f"ballsup-{strategy.lower().replace(' ', '-')}.csv"
+        st.download_button("Download CSV", results_csv(results, strategy), filename, "text/csv", key=filename)
 
 
 def main():
@@ -136,7 +143,7 @@ def main():
         except SimulationBusyError as error:
             st.warning(str(error))
         else:
-            st.session_state["analysis"] = (results, iterations, ranges, len(selected))
+            st.session_state["analysis"] = (results, iterations, ranges)
 
     if "analysis" in st.session_state:
         display_results(*st.session_state["analysis"])

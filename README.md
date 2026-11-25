@@ -63,7 +63,7 @@ Use `--server.address 0.0.0.0` to listen on all IPv4 interfaces. From another de
 
 > **Warning:** Binding to `0.0.0.0` can expose the dashboard on Wi-Fi, Ethernet, and VPN connections, and potentially to the internet if the host is publicly reachable or a router forwards the port. Keep the default `127.0.0.1` for local use. If you need network access, bind to the intended interface and configure your firewall to allow inbound TCP port `8501` only from trusted devices or subnets. Avoid public firewall rules and router port forwarding for this port.
 
-Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Run the simulation to see the same four result charts, summary values, the per-floor result table, and a CSV download. Results stay visible while you adjust settings and update when you run again.
+Use the sidebar to set the iteration count, ball weight, plate strength, and floor height ranges. You can also select the search strategies to compare. Each iteration uses the same ball weight, plate strength, and floor heights for every selected strategy. Each strategy tab shows its own charts, summary metrics, per-floor results, and CSV download. Results stay visible while you adjust settings and update when you run again.
 
 The dashboard allows 6,000 work units per run. Each iteration costs 8 units for linear search, 2 for halving, and 2 for binary search. Add the costs of the selected strategies to get the cost per iteration. This allows 500 iterations with all three strategies, 750 with linear search alone, and 3,000 with either halving or binary search alone. The dashboard starts with 500 iterations and all three strategies selected. Each server process runs one simulation at a time. If the slot is occupied, the dashboard displays a busy message and you can retry.
 
@@ -109,7 +109,7 @@ python run_tests.py
 
 The CLI prints the per-floor results and summary in the console and opens a Matplotlib graph. Matplotlib automatically selects an available backend on desktop Linux, Windows, macOS, and Raspberry Pi OS. Displaying the CLI graph requires a graphical session and a supported Python GUI toolkit, which the pip requirements do not install. For the system Python on Debian, Ubuntu, or Raspberry Pi OS, install Tk support with `sudo apt install python3-tk` if no other supported GUI toolkit is available. Without a usable interactive backend, Matplotlib can fall back to Agg and no graph window will open. The browser dashboard renders the charts within the page and does not need a desktop Matplotlib backend.
 It will show the average number of attempts required to find the critical floor for all the strategies, as well as the break percentage for each floor, 
-total breaks of each floor and the efficiency score for each floor.
+total breaks of each floor and the efficiency score for each floor, pooled across all strategies.
 
 ## Strategies Used
 

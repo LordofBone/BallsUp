@@ -16,12 +16,12 @@ if importlib.util.find_spec("streamlit") is not None:
 class TestDashboardWorkBudget(unittest.TestCase):
     def test_strategy_selection_changes_iteration_limit(self):
         ranges = ((0.5, 1.5), (4000, 7000), (1, 3))
-        with patch("dashboard_simulation.run_simulation_with_adjusted_parameters") as simulate:
+        with patch("dashboard_simulation.run_simulation_by_strategy") as simulate:
             with self.assertRaisesRegex(ValueError, "up to 750 iterations"):
                 run_dashboard_simulation(751, ranges, ["Linear search"])
             simulate.assert_not_called()
             run_dashboard_simulation(751, ranges, ["Binary search"])
-            simulate.assert_called_once_with(751, *ranges, (STRATEGIES["Binary search"][0],))
+            simulate.assert_called_once_with(751, *ranges, {"Binary search": STRATEGIES["Binary search"][0]})
 
     def test_occupied_slot_rejects_work_before_simulation(self):
         ranges = ((0.5, 1.5), (4000, 7000), (1, 3))
@@ -32,14 +32,14 @@ class TestDashboardWorkBudget(unittest.TestCase):
                 run_dashboard_simulation(1, ranges, selected)
             return {}
 
-        with patch("dashboard_simulation.run_simulation_with_adjusted_parameters",
+        with patch("dashboard_simulation.run_simulation_by_strategy",
                    side_effect=active_simulation) as simulate:
             run_dashboard_simulation(1, ranges, selected)
             simulate.assert_called_once()
 
     def test_simulator_failure_releases_slot(self):
         ranges = ((0.5, 1.5), (4000, 7000), (1, 3))
-        with patch("dashboard_simulation.run_simulation_with_adjusted_parameters") as simulate:
+        with patch("dashboard_simulation.run_simulation_by_strategy") as simulate:
             simulate.side_effect = [RuntimeError("failed"), {}]
             with self.assertRaisesRegex(RuntimeError, "failed"):
                 run_dashboard_simulation(500, ranges, list(STRATEGIES))
@@ -53,7 +53,7 @@ class TestDashboard(unittest.TestCase):
         dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
         dashboard.number_input[0].set_value(501)
         dashboard.button[0].click()
-        with patch("dashboard_simulation.run_simulation_with_adjusted_parameters") as simulate:
+        with patch("dashboard_simulation.run_simulation_by_strategy") as simulate:
             dashboard.run()
             simulate.assert_not_called()
         self.assertFalse(dashboard.exception)
@@ -68,25 +68,42 @@ class TestDashboard(unittest.TestCase):
             return {}
 
         ranges = ((0.5, 1.5), (4000, 7000), (1, 3))
-        with patch("dashboard_simulation.run_simulation_with_adjusted_parameters",
+        with patch("dashboard_simulation.run_simulation_by_strategy",
                    side_effect=active_simulation) as simulate:
             run_dashboard_simulation(1, ranges, list(STRATEGIES))
             simulate.assert_called_once()
         self.assertFalse(dashboard.exception)
         self.assertIn("server is busy", dashboard.warning[0].value)
 
-    def test_simulation_displays_results(self):
+    def test_simulation_compares_strategies_on_shared_inputs(self):
         dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
         self.assertFalse(dashboard.exception)
 
-        dashboard.number_input[0].set_value(1)
+        dashboard.multiselect[0].set_value(["Linear search", "Binary search"])
+        # The first draw breaks at floor 51. The second never breaks.
+        draws = [1.0] * 100 + [1.0, 3150.0] + [2.0] * 100 + [0.5, 7000.0]
+        dashboard.number_input[0].set_value(2)
         dashboard.button[0].click()
-        dashboard.run(timeout=30)
+        with patch("run.random.uniform", side_effect=draws) as uniform:
+            dashboard.run(timeout=30)
+
+        self.assertEqual(len(draws), uniform.call_count)
 
         self.assertFalse(dashboard.exception)
-        self.assertEqual(4, len(dashboard.metric))
-        self.assertEqual(5, len(dashboard.tabs))
-        self.assertEqual(100, len(dashboard.dataframe[0].value))
+        self.assertEqual(["Linear search", "Binary search"],
+                         [tab.label for tab in dashboard.tabs if tab.label in STRATEGIES])
+        self.assertEqual(2, len(dashboard.dataframe))
+        for table, attempts in zip(dashboard.dataframe, (11, 7)):
+            self.assertEqual(100, len(table.value))
+            rows = table.value.set_index("floor")
+            self.assertEqual(0, rows.loc[1, "starting_breaks"])
+            self.assertEqual(float("inf"), rows.loc[1, "efficiency_score"])
+            self.assertEqual(100, rows.loc[51, "breaks"])
+            self.assertEqual(1, rows.loc[60, "starting_breaks"])
+            self.assertEqual(50.0, rows.loc[60, "break_percentage"])
+            self.assertEqual(attempts, rows.loc[60, "attempts"])
+            self.assertEqual(attempts / 2, rows.loc[60, "average_attempts"])
+            self.assertAlmostEqual(attempts / 100, rows.loc[60, "efficiency_score"])
 
     def test_csv_and_chart_keep_zero_break_floors(self):
         results = {
@@ -95,7 +112,8 @@ class TestDashboard(unittest.TestCase):
             2: {"attempts": 2, "breaks": 1, "starting_breaks": 1,
                 "average_attempts": 2.0, "break_percentage": 100.0},
         }
-        rows = list(csv.DictReader(io.StringIO(results_csv(results))))
+        rows = list(csv.DictReader(io.StringIO(results_csv(results, "Linear search"))))
+        self.assertEqual("Linear search", rows[0]["strategy"])
         self.assertEqual("inf", rows[0]["efficiency_score"])
         self.assertEqual("0.02", rows[1]["efficiency_score"])
         figure = make_chart(results, "breaks", "Breaks", "Count", "#34d399", 2, bar=True)
@@ -108,6 +126,7 @@ class TestDashboard(unittest.TestCase):
         dashboard.number_input[2].set_value(0.001)
         dashboard.number_input[4].set_value(4000.0)
         dashboard.number_input[6].set_value(1.0)
+        dashboard.multiselect[0].set_value(["Linear search"])
         dashboard.button[0].click()
 
         with patch("streamlit.pyplot") as pyplot:

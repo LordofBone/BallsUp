@@ -49,6 +49,21 @@ class TestDashboardWorkBudget(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec("streamlit") is not None, "GUI dependencies are not installed")
 class TestDashboard(unittest.TestCase):
+    def test_caption_mean_for_large_finite_plate_strengths(self):
+        dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
+        dashboard.number_input[0].set_value(1)
+        dashboard.multiselect[0].set_value(["Binary search"])
+        strengths = {"Minimum strength": 1e308, "Maximum strength": 1.6e308}
+        for widget in dashboard.number_input:
+            if widget.label in strengths:
+                widget.set_value(strengths[widget.label])
+        dashboard.button[0].click().run()
+
+        self.assertFalse(dashboard.exception)
+        self.assertFalse(dashboard.error)
+        self.assertTrue(any("mean plate strength 1.3e+308 N" in caption.value
+                            for caption in dashboard.caption), [caption.value for caption in dashboard.caption])
+
     def test_excess_work_is_rejected_before_simulation(self):
         dashboard = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
         dashboard.number_input[0].set_value(501)

@@ -3,6 +3,7 @@
 import csv
 import io
 import math
+from statistics import mean
 
 import streamlit as st
 from matplotlib.figure import Figure
@@ -51,8 +52,9 @@ def make_chart(results, field, title, label, color, best_floor, bar=False):
 
 def display_results(by_strategy, iterations, ranges):
     st.subheader("Simulation results")
-    st.caption(f"{iterations:,} shared iterations per strategy · mean ball weight {sum(ranges[0]) / 2:g} kg · "
-               f"mean plate strength {sum(ranges[1]) / 2:g} N · mean floor height {sum(ranges[2]) / 2:g} m")
+    weight_range, strength_range, height_range = ranges
+    st.caption(f"{iterations:,} shared iterations per strategy · mean ball weight {mean(weight_range):g} kg · "
+               f"mean plate strength {mean(strength_range):g} N · mean floor height {mean(height_range):g} m")
     for tab, (strategy, results) in zip(st.tabs(list(by_strategy)), by_strategy.items()):
         with tab:
             display_strategy_results(strategy, results)

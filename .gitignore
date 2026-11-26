@@ -3,6 +3,7 @@ misc/*
 __pycache__
 venv/
 .venv/
+/.agents/
 
 # Share the VS Code unittest configuration.
 /.vscode/*

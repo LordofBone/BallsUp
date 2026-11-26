@@ -13,12 +13,21 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-On Windows PowerShell, use `.\.venv\Scripts\Activate.ps1` for the activation step.
+On Windows PowerShell, use this command for the activation step.
 
-Install the dashboard dependencies and start Streamlit from the repository root.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install the dashboard dependencies from the repository root.
 
 ```bash
 python -m pip install -r requirements-gui.txt
+```
+
+Start Streamlit from the repository root.
+
+```bash
 python -m streamlit run app.py
 ```
 
@@ -43,6 +52,11 @@ For a CLI-only setup, install `requirements.txt`. If you installed the dashboard
 
 ```bash
 python run.py
+```
+
+To list the available options, run this help command.
+
+```bash
 python run.py --help
 ```
 
@@ -58,9 +72,13 @@ Install the dashboard dependencies to run the full suite.
 python run_tests.py
 ```
 
-Run the dashboard suite on its own with `python run_gui_tests.py`. This runner fails if a dashboard test is skipped.
+To run only the dashboard suite and fail on skipped tests, use this command.
 
-In VS Code, open this README in the editor and select the command text inside a code block. Open the Command Palette and choose **Terminal: Run Selected Text in Active Terminal**. Use a terminal with the appropriate shell and virtual environment active for the command you’re running. [VS Code terminal documentation](https://code.visualstudio.com/docs/terminal/basics#_run-selected-text)
+```bash
+python run_gui_tests.py
+```
+
+In VS Code, open this README in the editor and select the command text inside a code block. Open the Command Palette and choose __Terminal: Run Selected Text in Active Terminal__. Use a terminal with the appropriate shell and virtual environment active for the command you’re running. [VS Code terminal documentation](https://code.visualstudio.com/docs/terminal/basics#_run-selected-text)
 
 ## How results are ranked
 

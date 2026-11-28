@@ -1,0 +1,35 @@
+name: Dependency audit
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit ${{ matrix.environment }} dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: CLI
+            requirements: requirements.txt
+          - environment: GUI
+            requirements: requirements-gui.txt
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install and freeze project dependencies
+        env:
+          REQUIREMENTS: ${{ matrix.requirements }}
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r "$REQUIREMENTS"
+          .venv/bin/python -m pip freeze > resolved-requirements.txt
+      - name: Audit installed versions
+        run: |
+          python -m pip install pip-audit
+          python -m pip_audit --strict --no-deps --disable-pip -r resolved-requirements.txt

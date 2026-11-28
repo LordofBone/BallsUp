@@ -1,121 +1,109 @@
-# BallsUp: Plate Break Simulation
+# BallsUp
 
-BallsUp is a simulation tool designed to determine the most efficient floor from which to drop a ball in order to break a plate positioned on the ground. 
-The program utilizes various strategies to minimize the number of attempts required to find the critical breaking point, 
-with a configurable range of randomly selected weights of the ball, strengths of the plate and floor heights.
+BallsUp simulates dropping a ball from different floors to find the lowest floor that breaks a plate. Compare linear search, halving, and binary search across randomized ball weights, plate strengths, and floor heights.
 
-## Features
+## Quick start
 
-- Implements binary search, halving, and linear search strategies.
-- Determines the most statistically efficient starting floor for a ball drop.
-- Customizable simulation parameters (ball weight, plate strength, floor height).
-- Outputs both a raw and visual representation of simulation results.
+With Python 3.11 or newer, create and activate a virtual environment.
 
-## Getting Started
-
-To get started with BallsUp, you need to have Python installed on your system along with the necessary libraries such as `numpy`, `matplotlib`, and `Pillow`.
-
-### Prerequisites
-
-- Python 3.10 or higher
-- Pip (Python package installer)
-
-### Installation
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/LordofBone/BallsUp.git
 cd BallsUp
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-2. Create Python virtual environment (optional):
+On Windows PowerShell, use this command for the activation step.
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install the dashboard dependencies from the repository root.
+
 ```bash
-python -m venv venv
+python -m pip install -r requirements-gui.txt
 ```
 
-3. Activate virtual environment and install requirements (optional):
+Start Streamlit from the repository root.
+
 ```bash
-source venv/bin/activate
-pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-Or you can install the requirements globally (non-virtual environment) like so:
+Open [the local dashboard](http://127.0.0.1:8501). Use the sidebar to choose strategies, iterations, and input ranges. Each strategy runs against the same sampled inputs and gets its own charts, per-floor results, and CSV download. The dashboard allows 500 iterations with all three strategies, 750 with linear search alone, or 3,000 with halving or binary search alone. Each server process runs one simulation at a time.
+
+<details>
+<summary>Access from another device</summary>
+
+The dashboard binds to `127.0.0.1` by default. To use it from a trusted device on your network, bind to the host's LAN IP address. Replace the example address with yours.
+
 ```bash
-pip install -r requirements.txt
+python -m streamlit run app.py --server.address 192.168.1.10
 ```
 
-### Usage
+Open `http://192.168.1.10:8501` from the other device. Limit inbound TCP port 8501 to trusted devices or subnets and avoid public port forwarding.
 
-To run the simulation, execute the main script:
+</details>
+
+## Command line
+
+For a CLI-only setup, install `requirements.txt`. If you installed the dashboard dependencies, you can already run the CLI.
+
 ```bash
 python run.py
 ```
 
-You can adjust the simulation parameters by editing the simulation.py file or by setting the variables at runtime.
+To list the available options, run this help command.
 
-The simulation parameters are as follows:
-```python
-NUM_ITERATIONS = 1000  # Number of iterations to run the simulation | Default: 1000
-BALL_WEIGHT_RANGE = (0.5, 1.5)  # Ball weight range in kg | Default: (0.5, 1.5)
-PLATE_STRENGTH_RANGE = (4000, 7000)  # Plate strength range in Newtons | Default: (4000, 7000)
-FLOOR_HEIGHT_RANGE = (1, 3)  # Floor height range in meters | Default: (1, 3)
-```
-
-The force estimate assumes the ball stops in 0.01 seconds after impact. `NUM_ITERATIONS` must be between 1 and 10,000; range endpoints must be positive, finite, and in ascending order.
-
-They can also be adjusted like so:
 ```bash
-python run.py --num_iterations 5000 --ball_weight_min 0.3 --ball_weight_max 2.0 --plate_strength_min 3000 --plate_strength_max 8000 --floor_height_min 0.5 --floor_height_max 5.0
+python run.py --help
 ```
 
-Tests can be run with the following command:
+The CLI defaults to 1,000 iterations, with ball weights of 0.5–1.5 kg, plate strengths of 4,000–7,000 N, and floor heights of 1–3 m. Pass `--num_iterations` to set a count from 1 to 10,000. Range endpoints must be positive, finite, and in ascending order.
+
+The CLI prints pooled results and opens a Matplotlib chart when an interactive backend is available. On Debian, Ubuntu, or Raspberry Pi OS, `sudo apt install python3-tk` adds Tk support for the system Python. The dashboard renders charts in the browser.
+
+## Tests
+
+Install the dashboard dependencies to run the full suite.
+
 ```bash
 python run_tests.py
 ```
 
-### Results
+To run only the dashboard suite and fail on skipped tests, use this command.
 
-The results will then be shown as a Matplotlib graph and text output in the console. Matplotlib automatically selects an available backend on desktop Linux, Windows, macOS, and Raspberry Pi OS. Displaying the graph requires a graphical session and a supported Python GUI toolkit, which the pip requirements do not install. For the system Python on Debian, Ubuntu, or Raspberry Pi OS, install Tk support with `sudo apt install python3-tk` if no other supported GUI toolkit is available. Without a usable interactive backend, Matplotlib can fall back to Agg and no graph window will open.
-It will show the average number of attempts required to find the critical floor for all the strategies, as well as the break percentage for each floor, 
-total breaks of each floor and the efficiency score for each floor.
+```bash
+python run_gui_tests.py
+```
 
-## Strategies Used
+In VS Code, open this README in the editor and select the command text inside a code block. Open the Command Palette and choose __Terminal: Run Selected Text in Active Terminal__. Use a terminal with the appropriate shell and virtual environment active for the command you’re running. [VS Code terminal documentation](https://code.visualstudio.com/docs/terminal/basics#_run-selected-text)
 
-### Binary Search
-The Binary Search strategy is a divide-and-conquer approach. It starts by checking the middle floor of a predefined range
-(from the lowest to the highest floor). If the ball breaks the plate, the search continues in the lower half of the range, 
-narrowing down the floors until the minimum breaking floor is found. If the ball does not break the plate, the search moves to the upper half. 
-This method efficiently zeroes in on the critical breaking point.
+## How results are ranked
 
-### Halving
-The Halving strategy is a heuristic approach that starts from a specific floor and then halves the distance to the ground, 
-either moving up or down based on whether the plate breaks. The process repeats, halving the distance each time, 
-until it hones in on the floor just high enough to break the plate. This strategy is a quick way to approximate the breaking point as a start, 
-but then it linearly counts to find the exact floor as a final fine tune.
+- **Linear search** checks adjacent floors from the chosen starting floor.
+- **Halving** repeatedly adjusts the floor by smaller steps, then checks adjacent floors to find the threshold.
+- **Binary search** narrows the candidate interval until it finds the lowest breaking floor.
 
-### Linear Search
-The Linear Search strategy involves sequentially checking each floor, either moving upwards or downwards from a starting point. 
-This method is straightforward and exhaustive, as it checks every floor until it finds the exact point where the plate breaks. 
-While potentially slower than other methods, it guarantees finding the precise breaking point.
+The force estimate assumes the ball stops in 0.01 seconds on impact. To rank starting floors, the simulation divides average attempts by the break percentage. Lower scores are better. A zero break percentage gives an infinite score.
 
-## Determining the Most Efficient Floor
+<details>
+<summary>Dashboard benchmarks</summary>
 
-The simulation includes a function `find_most_efficient_floor_from_results` to determine the most efficient floor to start the ball drop from. 
-This function calculates an efficiency score for each floor based on the results of the simulation. Here's how it works:
+The following simulation timings are medians of three runs at 100 iterations on a Cortex-A76 with Python 3.13.5. They cover computation across all 100 starting floors and exclude chart rendering. The edge cases fix the ball weight and floor height at 1 kg and 1 m, respectively, with plate strength set to 4,400 N, 1 N, or 10,000 N.
 
-1. **Efficiency Score Calculation**: The efficiency score for each floor is calculated by dividing the average number of attempts (to find the breaking point) by the break percentage at that floor. The break percentage is the ratio of the number of times the plate breaks when dropped from that floor to the total number of drops from that floor. This score aims to balance the need for a high chance of breaking the plate against the desire to minimize the number of attempts.
+| Settings | Linear search | Halving | Binary search | All three |
+| --- | ---: | ---: | ---: | ---: |
+| Dashboard defaults | 1.331 s | 0.450 s | 0.443 s | 2.092 s |
+| Break at floor 100 | 2.549 s | 0.493 s | 0.478 s | 3.400 s |
+| Break at floor 1 | 2.417 s | 0.430 s | 0.375 s | 3.126 s |
+| No break | 0.116 s | 0.116 s | 0.116 s | 0.246 s |
 
-2. **Handling Zero Breaks**: If there are no breaks from a particular starting floor (which would lead to a division by zero), the efficiency score for that floor is set to infinity. This effectively ranks floors with no breaks as the least efficient.
+At the 500-iteration limit with all three strategies, simulation took 10.09 s with the default ranges and 16.82 s in the floor-100 case. Streamlit AppTest measured 11.81 s and 18.12 s from form submission through server-side rendering for those same cases. The budget weights reflect the higher cost of linear search in the edge cases. Actual runtimes depend on the machine and input ranges.
 
-3. **Identifying the Most Efficient Floor**: The floor with the lowest efficiency score is identified as the most efficient starting floor. A lower score indicates that fewer attempts are needed on average to break the plate, while still maintaining a high likelihood of breakage.
-
-This approach provides a balanced measure of efficiency, taking into account both the effectiveness of breaking the plate and the effort (number of attempts) required to achieve this outcome. The most efficient floor is thus the one that optimizes these two factors.
-
-
-## Contributing
-
-Contributions to the project are welcome! Please fork the repository and submit a pull request with your changes.
+</details>
 
 ## License
 
-This project is licensed under the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html).
+[GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html).
